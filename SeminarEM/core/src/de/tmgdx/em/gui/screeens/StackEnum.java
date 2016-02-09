@@ -23,6 +23,9 @@ import de.tmgdx.em.Constants;
 public enum StackEnum {// SP_FROM_SERVER(""),
 	SP_I("Waermeenergie"), SP_II("Wasser"), PC_I("Control");
 
+	private static final String COMUNICATION_FORMAT = "application/json";
+	private static final String SERVER_URL = "http://localhost:8080/SeminarEM_Tomcat/EMServer";
+
 	StackEnum(String name) {
 		this.name = name;
 	}
@@ -38,69 +41,31 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 
 	private static String[] nameArrayFromServer = null;
 
-	private static int timesNamesLoaded = 0;
-
 	/**
 	 * load SPs Names form Server and return them
 	 */
 	private static void loadNameArrayFromServer() {
 		// TODO check last configuration date
 
-		// System.out.println("timesNamesLoaded" + ++timesNamesLoaded);
-
-		// set the HttpMethod | final could cause an Error
 		final HttpRequest request = new HttpRequest(HttpMethods.GET);
-		// set the Url
-		request.setUrl("http://localhost:8080/SeminarEM_Tomcat/EMServer");
-		// Be sure to set the Content-Type header for POST requests
-		request.setHeader(HttpRequestHeader.ContentType, "application/json"); // application/x-www-form-urlencoded
-		// set the content
-		// request.setContent(dataToJsonString(dataName));
+		request.setUrl(SERVER_URL);
+		request.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
 
-		// send the HttpRequest
 		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
 			@Override
 			public void handleHttpResponse(HttpResponse httpResponse) {
-				String restultString = httpResponse.getResultAsString();
-				Gdx.app.log("Status code", ""
-						+ httpResponse.getStatus().getStatusCode());
-				Gdx.app.log("Result", restultString);
+				if (isExpectedStatus(httpResponse)) {
+					String[] out = generateNames(httpResponse
+							.getResultAsString());
 
-				// convert ResultStrin to an String[] of Names
-				String[] strArray2 = restultString.split("File: ");
-				/*
-				 * Array<String> strArray = new Array<String>(); for (String
-				 * string : strArray2) { if (string.isEmpty()) continue; // TODO
-				 * Filter Directories and /n out strArray.add(string);
-				 * System.out.println(string); } int length = strArray.size;
-				 * String[] out = new String[length]; for (int i = 0; i <
-				 * length; i++) { String string = strArray.get(i); out[i] =
-				 * string; System.out.println(i++ + " NameArray: " + out[i] +
-				 * " in: " + string); }
-				 */
-				int elements = 0;
-				for (String string : strArray2) {
-					if (string.isEmpty() || !string.contains(".txt"))// ||
-																		// !string.endsWith(".txt")
-						continue;
-					// TODO Filter Directories and /n out
-					System.out.println(elements + ": " + string);
-					elements++;
+					setNameArrayFromServer(out);
 				}
-				String[] out = new String[elements];
-				int i = 0;
-				for (String string : strArray2) {
-					if (string.isEmpty() || !string.contains(".txt"))
-						continue;
-					out[i++] = string.substring(0, string.length() - 4);
-				}
-
-				setNameArrayFromServer(out);
 			}
 
 			@Override
 			public void failed(Throwable t) {
 				Gdx.app.error("HttpRequest", "something went wrong", t);
+				// TODO handle it right
 			}
 
 			@Override
@@ -109,67 +74,83 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 						"sendHttpRequest " + request.getMethod());
 			}
 		});
+		// TODO Synchronize!!!
+		while (nameArrayFromServer == null)
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+	}
 
+	private static boolean isExpectedStatus(HttpResponse httpResponse) {
+		if (httpResponse.getStatus().getStatusCode() != 200) {
+			Gdx.app.log("unexpected Status code", ""
+					+ httpResponse.getStatus().getStatusCode());
+			Gdx.app.log("Result", httpResponse.getResultAsString());
+			return false;
+		} else
+			return true;
+	}
+
+	private static String[] generateNames(String restultString) {
+		String[] strArray2 = restultString.split("File: ");
+
+		int elements = 0;
+		for (String string : strArray2) {
+			if (string.isEmpty() || !string.contains(".txt"))// ||
+																// !string.endsWith(".txt")
+				continue;
+			// TODO Filter Directories and /n out
+			System.out.println(elements + ": " + string);
+			elements++;
+		}
+		String[] out = new String[elements];
+		int i = 0;
+		for (String string : strArray2) {
+			if (string.isEmpty() || !string.contains(".txt"))
+				continue;
+			out[i++] = string.substring(0, string.length() - 4);
+		}
+		return out;
 	}
 
 	private static void setNameArrayFromServer(String[] out) {
-		/*
-		 * int length = strArray.size; String[] out = new String[length]; for
-		 * (int i = 0; i < length; i++) { String string = strArray.get(i);
-		 * out[i] = string; System.out.println(i++ + " NameArray: " + out[i] +
-		 * " in: " + string); }
-		 */
-
 		nameArrayFromServer = out;
-		if (nameArrayFromServer != null)
-			System.out.println("nameArrayFromServer: "
-					+ nameArrayFromServer.length);
-		/*
-		 * int i = 0; for (String string : nameArrayFromServer) {
-		 * System.out.println(i++ + " NameArray: " + string); }
-		 */
-
 		// TODO save NameArray local
 	}
 
 	public static String[] getNames() {
-		if (nameArrayFromServer == null)
-			loadNameArrayFromServer();
-		System.out.println("Are names loaded? ");
-		// TODO Synchronize!!!
-		while (nameArrayFromServer == null)
-			System.out.println(nameArrayFromServer);
-		System.out.println("Names are loaded");
+		return mergeScreenNames();
+	}
 
-		int length = StackEnum.values().length;
-		if (nameArrayFromServer != null) {
-			length += nameArrayFromServer.length;
-			// TODO make it better length -= 2;
+	private static String[] mergeScreenNames() {
+		String[] out = new String[getNumberOfScreens()];
+		int index = 0;
+		for (String name : getNameArrayFromServer()) {
+			out[index++] = name;
 		}
-
-		String[] out = new String[length];
-		int i = 0;
-		if (nameArrayFromServer != null)
-			for (String name : nameArrayFromServer) {
-				out[i++] = name;
-			}
 		for (StackEnum stackEnum : StackEnum.values()) {
 			// TODO make it better
-			if (nameArrayFromServer != null && stackEnum.plattform == "SP")
+			if (getNameArrayFromServer() != null && stackEnum.plattform == "SP")
 				continue;
-			out[i++] = stackEnum.toString();
+			out[index++] = stackEnum.toString();
 		}
-
 		return out;
+	}
+
+	private static int getNumberOfScreens() {
+		int length = StackEnum.values().length;
+		if (getNameArrayFromServer() != null) {
+			length += getNameArrayFromServer().length;
+			// TODO make it better length -= 2;
+		}
+		return length;
 	}
 
 	public static void generateStack(Skin skin) {
 		for (StackEnum stack : StackEnum.values())
 			switch (stack) {
-			/*
-			 * case SP_FROM_SERVER: stack.stack = new SP_I_Stack(stack.name,
-			 * skin); break;
-			 */
 			case SP_I:
 				stack.stack = new SP_I_Stack(stack.name, skin);
 				break;
@@ -193,25 +174,16 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 	}
 
 	public static Stack[] getStacks(Skin skin) {
-		if (nameArrayFromServer == null)
-			loadNameArrayFromServer();
-
-		// System.out.println(nameArrayFromServer);
-
-		int length = nameArrayFromServer.length + StackEnum.values().length;
-		if (nameArrayFromServer != null)
-			;
-		// TODO make it better length -= 2;
-		Stack[] out = new Stack[length];
-		int i = 0;
-		for (String name : nameArrayFromServer) {
-			out[i++] = loadStackDataFromServer(name, skin);
+		Stack[] out = new Stack[getNumberOfScreens()];
+		int index = 0;
+		for (String name : getNameArrayFromServer()) {
+			out[index++] = loadStackDataFromServer(name, skin);
 		}
 		for (StackEnum stackEnum : StackEnum.values()) {
 			// TODO make it better
-			if (nameArrayFromServer != null && stackEnum.plattform == "SP")
+			if (getNameArrayFromServer() != null && stackEnum.plattform == "SP")
 				continue;
-			out[i++] = stackEnum.stack;
+			out[index++] = stackEnum.stack;
 		}
 
 		return out;
@@ -219,55 +191,18 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 
 	private static Stack loadStackDataFromServer(String dataName, Skin skin) {
 		// TODO make it more elegant: load all data needed when Started
-		// set the HttpMethod | final could cause an Error
 		final HttpRequest request = new HttpRequest(HttpMethods.POST);
-		// set the Url
-		request.setUrl("http://localhost:8080/SeminarEM_Tomcat/EMServer");
-		// Be sure to set the Content-Type header for POST requests
-		request.setHeader(HttpRequestHeader.ContentType, "application/json"); // application/x-www-form-urlencoded
-		// set the content
+		request.setUrl(SERVER_URL);
+		request.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
 
-		class JsonData {
-			private String command = "loadDataName";
-			private String dataName;
+		request.setContent(new Json().toJson(dataName));
 
-			public JsonData(String dataName) {
-				this.dataName = dataName;
-			}
-
-			public String toJsonString() {
-				Json json = new Json();
-				// Gdx.app.log("dataToJson", json.prettyPrint(this));
-				return json.toJson(this);
-			}
-		}
-		request.setContent(new JsonData(dataName).toJsonString());
-
-		// send the HttpRequest
 		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
 			@Override
 			public void handleHttpResponse(HttpResponse httpResponse) {
-				String restultString = httpResponse.getResultAsString();
-				Gdx.app.log("Status code", ""
-						+ httpResponse.getStatus().getStatusCode());
-				Gdx.app.log("Result", restultString);
-
-				// convert ResultStrin to an String[] of Names
-				// String[] strArray = restultString.split("File: ");
-				Array<String> strArray = new Array<String>();
-				for (String string : restultString.split(",")) {
-					if (string.isEmpty())
-						continue;
-					// TODO Filter Directories and/n out
-					if (string.startsWith("["))
-						string = string.substring(2, string.length() - 1);
-					else if (string.endsWith("\n"))
-						string = string.substring(1, string.length() - 3);
-					else
-						string = string.substring(1, string.length() - 1);
-					strArray.add(string);
+				if (isExpectedStatus(httpResponse)) {
+					setStackDataFromServer(generateStackData(httpResponse));
 				}
-				setStackDataFromServer(strArray);
 			}
 
 			@Override
@@ -281,34 +216,52 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 						"sendHttpRequest " + request.getMethod());
 			}
 		});
-		return makeStackWithStackDataFromServer(getStackDataFromServer(),
-				dataName, skin);
+		// TODO Synchronize!!!
+		while (stackDataFromServer == null)
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		return new SP_I_Stack(dataName, skin,
+				(String[]) stackDataFromServer.toArray(String.class));
 		// TODO save StackData local
+	}
+
+	private static Array<String> generateStackData(HttpResponse httpResponse) {
+		Array<String> strArray = new Array<String>();
+		for (String string : httpResponse.getResultAsString().split(",")) {
+			if (string.isEmpty())
+				continue;
+			// TODO Filter Directories and/n out
+			if (string.startsWith("["))
+				string = string.substring(2, string.length() - 1);
+			else if (string.endsWith("\n"))
+				string = string.substring(1, string.length() - 3);
+			else
+				string = string.substring(1, string.length() - 1);
+			strArray.add(string);
+		}
+		return strArray;
 	}
 
 	private static Array<String> stackDataFromServer;
 
-	protected static void setStackDataFromServer(Array<String> strArray) {
-		stackDataFromServer = strArray;
+	protected static void setStackDataFromServer(Array<String> stackData) {
+		stackDataFromServer = stackData;
 	}
 
 	protected static Array<String> getStackDataFromServer() {
-		// wait
-		while (stackDataFromServer == null)
-			System.out.println("wait on getStackDataFromServer()");
-
 		Array<String> out = stackDataFromServer;
 		stackDataFromServer = null;
 		return out;
 	}
 
-	private static Stack makeStackWithStackDataFromServer(
-			Array<String> stackDataFromServer, String dataName, Skin skin) {
-
-		SP_I_Stack stack = new SP_I_Stack(dataName, skin,
-				(String[]) stackDataFromServer.toArray(String.class));
-
-		return stack;
+	private static String[] getNameArrayFromServer() {
+		if (nameArrayFromServer == null)
+			loadNameArrayFromServer();
+		return nameArrayFromServer;
 	}
 }
 
@@ -340,47 +293,6 @@ class SP_I_Stack extends Stack {
 		if (this.lableNameArray == null)
 			this.lableNameArray = labelsName;
 		init(dataName, skin);
-	}
-
-	private String[] getNameArrayFormServer(String dataName) {
-		// set the HttpMethod | final could cause an Error
-		final HttpRequest request = new HttpRequest(HttpMethods.GET);
-		// set the Url
-		request.setUrl("http://localhost:8080/SeminarEM_Tomcat/EMServer");
-		// Be sure to set the Content-Type header for POST requests
-		request.setHeader(HttpRequestHeader.ContentType, "application/json"); // application/x-www-form-urlencoded
-		// set the content
-		request.setContent(dataToJsonString(dataName));
-
-		// send the HttpRequest
-		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
-			@Override
-			public void handleHttpResponse(HttpResponse httpResponse) {
-				Gdx.app.log("Status code", ""
-						+ httpResponse.getStatus().getStatusCode());
-				Gdx.app.log("Result", httpResponse.getResultAsString());
-
-				// TODO convert the JsonString to an String[]
-				// Json json = new Json();
-				// String text = json.toJson(person, Object.class);
-				// JsonValue root = new JsonReader().parse(text);
-
-				httpResponse.getResultAsString();
-
-			}
-
-			@Override
-			public void failed(Throwable t) {
-				Gdx.app.error("HttpRequest", "something went wrong", t);
-			}
-
-			@Override
-			public void cancelled() {
-				Gdx.app.log("Cancelled",
-						"sendHttpRequest " + request.getMethod());
-			}
-		});
-		return null;
 	}
 
 	private void init(final String dataName, Skin skin) {
@@ -471,21 +383,12 @@ class SP_I_Stack extends Stack {
 		// private int age = 31;
 		// private String[] numbers = { "206-555-1234", "425-555-4321" };
 
-		private String command = "uploadData";
-		private String dataName;
-		private Array<String> nameArray;
-		private Array<String> dataArray;
-
 		public EMData(String dataName, Array<String> nameArray,
 				Array<String> dataArray) {
-			this.dataName = dataName;
-			this.nameArray = nameArray;
-			this.dataArray = dataArray;
 		}
 	}
 
 	class EMData2 {
-		private String name = "Nate";
 		private Array<String> numbers = new Array<String>();
 		private String[] namesArray;
 
@@ -535,19 +438,6 @@ class PC_I_Stack extends Stack {
 	 * } fileBin.readBytes(); }
 	 */
 
-	private void writeConfigs() {
-		String fileString = "test";
-		FileHandle fileBin = Gdx.files.local(fileString + ".bin");
-		byte[] bytes = textFieldArray2DToByteArray(posTextFieldArray2D);
-		fileBin.writeBytes(bytes, false);
-		Gdx.app.log("save Bytes at", fileBin.path() + ": " + bytes.toString());
-
-		FileHandle fileNames = Gdx.files.local(fileString + ".txt");
-		String string = textFieldArrayToString(nameTextFieldArray);
-		fileNames.writeString(string, false);
-		Gdx.app.log("save Configs at", fileNames.path() + ": " + string);
-	}
-
 	private String textFieldArrayToString(Array<TextField> nameTextFieldArray) {
 		String string = "";
 		for (int i = 0; i < nameTextFieldArray.size; i++) {
@@ -556,15 +446,6 @@ class PC_I_Stack extends Stack {
 				string = string.concat(":");
 		}
 		return string;
-	}
-
-	private Array<TextField> stringToTextFieldArray(String string) {
-		String[] stringArray = string.split(":");
-		Array<TextField> nameTextFieldArray = new Array<TextField>();
-		for (int i = 0; i < stringArray.length; i++) {
-			nameTextFieldArray.add(new TextField(stringArray[i], skin));
-		}
-		return nameTextFieldArray;
 	}
 
 	private byte[] textFieldArray2DToByteArray(
@@ -585,28 +466,13 @@ class PC_I_Stack extends Stack {
 		return bytes;
 	}
 
-	private String configsToString() {
-		String string = "";
-		for (int i = 0; i < nameTextFieldArray.size; i++) {
-			string = string.concat("[" + nameTextFieldArray.get(i).getText()
-					+ ": ");
-			for (int j = 0; j < posTextFieldArray2D.size; j++) {
-				String end = j + 1 < posTextFieldArray2D.size ? ", " : "] ";
-				string = string.concat(posTextFieldArray2D.get(j).get(i)
-						.getText()
-						+ end);
-			}
-		}
-		return string;
-	}
-
 	private void init(final Skin skin) {
 		if (nameTextFieldArray.size == 0)
 			nameTextFieldArray.add(new TextField("Name", skin));
 		if (posTextFieldArray2D.size == 0)
 			posTextFieldArray2D.add(new Array<TextField>());
 
-		//TODO convert letters to numbers
+		// TODO convert letters to numbers
 		TextButton btnSave = new TextButton("Save", skin);
 		btnSave.addListener(new ChangeListener() {
 			@Override
@@ -614,7 +480,7 @@ class PC_I_Stack extends Stack {
 				saveConfigs();
 			}
 		});
-		//TODO add smart addition like in Excel
+		// TODO add smart addition like in Excel
 		TextButton btnAddPos = new TextButton("+", skin);
 		btnAddPos.addListener(new ChangeListener() {
 			@Override
@@ -623,7 +489,7 @@ class PC_I_Stack extends Stack {
 				init(skin);
 			}
 		});
-		//TODO add smart addition like in Excel
+		// TODO add smart addition like in Excel
 		TextButton btnAddVar = new TextButton("+", skin);
 		btnAddVar.addListener(new ChangeListener() {
 			@Override
@@ -724,15 +590,12 @@ class PC_I_Stack extends Stack {
 	}
 
 	class JsonData {
-		private String command = "updateConfigs";
-		private String dataName;
 		private Array<String> nameArray;
 		private byte[] posByteArray;
 
 		public JsonData(String dataName,
 				Array<Array<TextField>> posTextFieldArray2D,
 				Array<TextField> nameTextFieldArray) {
-			this.dataName = dataName;
 			this.nameArray = new Array<String>();
 			for (TextField textField : nameTextFieldArray) {
 				nameArray.add(textField.getText());

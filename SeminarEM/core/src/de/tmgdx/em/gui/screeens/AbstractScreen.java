@@ -8,7 +8,6 @@ import de.tmgdx.em.Assets;
 import de.tmgdx.em.DirectedGame;
 
 public abstract class AbstractScreen implements Screen {
-//	protected static DirectedGame game;
 	protected  DirectedGame game;
 	
 	public AbstractScreen(DirectedGame game) {

@@ -6,23 +6,16 @@ import com.badlogic.gdx.Net.HttpRequest;
 import com.badlogic.gdx.Net.HttpResponse;
 import com.badlogic.gdx.Net.HttpResponseListener;
 import com.badlogic.gdx.net.HttpRequestHeader;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 
-import de.tmgdx.em.Constants;
+public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasser"),
+	PC_I("Control");
 
-public enum StackEnum {// SP_FROM_SERVER(""),
-	SP_I("Waermeenergie"), SP_II("Wasser"), PC_I("Control");
-
-	private static final String COMUNICATION_FORMAT = "application/json";
-	private static final String SERVER_URL = "http://localhost:8080/SeminarEM_Tomcat/EMServer";
+	public static final String COMUNICATION_FORMAT = "application/json";
+	public static final String SERVER_URL = "http://localhost:8080/SeminarEM_Tomcat/EMServer";
 
 	StackEnum(String name) {
 		this.name = name;
@@ -44,34 +37,17 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 	 */
 	private static void loadNameArrayFromServer() {
 		// TODO check last configuration date
-
-		final HttpRequest request = new HttpRequest(HttpMethods.GET);
-		request.setUrl(SERVER_URL);
-		request.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
-
-		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
+		HttpRequestHelper request = new HttpRequestHelper(){
 			@Override
-			public void handleHttpResponse(HttpResponse httpResponse) {
-				if (isExpectedStatus(httpResponse)) {
-					String[] out = generateNames(httpResponse
-							.getResultAsString());
+			protected void handleResponse(HttpResponse httpResponse) {
+				String[] out = generateNames(httpResponse
+						.getResultAsString());
 
-					setNameArrayFromServer(out);
-				}
+				setNameArrayFromServer(out);
 			}
+		};
+		request.sendRequest();
 
-			@Override
-			public void failed(Throwable t) {
-				Gdx.app.error("HttpRequest", "something went wrong", t);
-				// TODO handle it right
-			}
-
-			@Override
-			public void cancelled() {
-				Gdx.app.log("Cancelled",
-						"sendHttpRequest " + request.getMethod());
-			}
-		});
 		// TODO Synchronize!!!
 		while (nameArrayFromServer == null)
 			try {
@@ -81,7 +57,7 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 			}
 	}
 
-	private static boolean isExpectedStatus(HttpResponse httpResponse) {
+	public static boolean isExpectedStatus(HttpResponse httpResponse) {
 		if (httpResponse.getStatus().getStatusCode() != 200) {
 			Gdx.app.log("unexpected Status code", ""
 					+ httpResponse.getStatus().getStatusCode());
@@ -147,20 +123,26 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 	}
 
 	public static void generateStack(Skin skin) {
-		for (StackEnum stack : StackEnum.values())
-			switch (stack) {
+		for (StackEnum value : StackEnum.values())
+			switch (value) {
+			/*case SP_II:
+				value.stack = new Input_Stack(value.name, skin, new String[] {
+						"Datum", "Kaltwasser FOS gross",
+						"Kaltwasser FOS klein", "Warmwasser Turnh.",
+						"Warmwasser FOS", "Kaltwasser WS gross",
+						"Kaltwasser WS klein" });
+				break;
 			case SP_I:
-				stack.stack = new SP_I_Stack(stack.name, skin);
-				break;
-			case SP_II:
-				stack.stack = new SP_II_Stack(stack.name, skin);
-				break;
+				value.stack = new Input_Stack(value.name, skin, new String[] {
+						"Datum", "Fernwärme", "Turnhalle",
+						"Uebertragungsstation", "Hausmeister" });
+				break;*/
 			case PC_I:
-				stack.stack = new PC_I_Stack(skin);
+				value.stack = new PC_I_Stack(skin);
 				break;
 
 			default:
-				stack.stack = new Stack_default(skin);
+				value.stack = new Stack_default(skin);
 				break;
 			}
 	}
@@ -189,31 +171,14 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 
 	private static Stack loadStackDataFromServer(String dataName, Skin skin) {
 		// TODO make it more elegant: load all data needed when Started
-		final HttpRequest request = new HttpRequest(HttpMethods.POST);
-		request.setUrl(SERVER_URL);
-		request.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
-
-		request.setContent(new Json().toJson(dataName));
-
-		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
+		HttpRequestHelper request = new HttpRequestHelper(HttpMethods.POST,new LoadCommant(dataName)){
 			@Override
-			public void handleHttpResponse(HttpResponse httpResponse) {
-				if (isExpectedStatus(httpResponse)) {
-					setStackDataFromServer(generateStackData(httpResponse));
-				}
+			protected void handleResponse(HttpResponse httpResponse) {
+				setStackDataFromServer(generateStackData(httpResponse));
 			}
-
-			@Override
-			public void failed(Throwable t) {
-				Gdx.app.error("HttpRequest", "something went wrong", t);
-			}
-
-			@Override
-			public void cancelled() {
-				Gdx.app.log("Cancelled",
-						"sendHttpRequest " + request.getMethod());
-			}
-		});
+		};
+		request.sendRequest();
+		
 		// TODO Synchronize!!!
 		while (stackDataFromServer == null)
 			try {
@@ -222,9 +187,16 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 				e.printStackTrace();
 			}
 
-		return new SP_I_Stack(dataName, skin,
+		return new Input_Stack(dataName, skin,
 				(String[]) stackDataFromServer.toArray(String.class));
 		// TODO save StackData local
+	}
+	static class LoadCommant{
+		private String command = "loadDataName", dataName;
+		public LoadCommant(String dataName) {
+			this.dataName = dataName;
+		}
+		
 	}
 
 	private static Array<String> generateStackData(HttpResponse httpResponse) {
@@ -262,6 +234,3 @@ public enum StackEnum {// SP_FROM_SERVER(""),
 		return nameArrayFromServer;
 	}
 }
-
-
-

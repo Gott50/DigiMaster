@@ -89,7 +89,7 @@ public class MainScreen extends AbstractScreen {
 		stage.addActor(buildMainStack());
 	}
 
-	private Stack mainStack = StackEnum.SP_I.getStack();
+	private Stack mainStack;//  = StackEnum.PC_I.getStack()
 
 	private Stack buildMainStack() {
 		Stack stack = mainStack;//.getStack()

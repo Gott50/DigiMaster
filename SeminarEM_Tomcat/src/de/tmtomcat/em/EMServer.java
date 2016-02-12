@@ -42,7 +42,11 @@ public class EMServer extends HttpServlet {
 	public void init() throws ServletException {
 		super.init();
 		// creating Folders and Strings
-		userDataFolderString = getServletContext().getRealPath("/UserData");
+		userDataFolderString = getServletContext().getRealPath("/UserData");// FIXME
+																			// Path
+																			// cases
+																			// Bad
+																			// Bugs!!!
 		System.out.println("cretated new UserDataFoler? "
 				+ new File(userDataFolderString).mkdir());
 		positionFolderString = userDataFolderString + "/Positions";
@@ -162,7 +166,7 @@ public class EMServer extends HttpServlet {
 	private void sendDataNameInfo(HttpServletResponse response,
 			JSONObject jsonObject) throws IOException {
 		// load dataPositionJson for the position
-		String dataPositionFile = positionFolderString +"/"
+		String dataPositionFile = positionFolderString + "/"
 				+ jsonObject.getString("dataName") + dataExtetsion;
 		dataPositionJson = createJsonObjectFromFile(dataPositionFile, null);
 		System.out.println("loaded: " + dataPositionJson);
@@ -215,24 +219,26 @@ public class EMServer extends HttpServlet {
 			throws JSONException, IOException {
 		// load dataPositionJson for the position
 		String dataPositionFile = positionFolderString + "/"
-				+ jsonObject.getString("dataName")+dataExtetsion;
+				+ jsonObject.getString("dataName") + dataExtetsion;
 		dataPositionJson = createJsonObjectFromFile(dataPositionFile, null);
 
 		// year is stored as a static member
 		int year = Calendar.getInstance().get(Calendar.YEAR);
 		int month = Calendar.getInstance().get(Calendar.MONTH);
-		System.out.println("using Date: year: " +year+"; month: " +month);
+		System.out.println("using Date: year: " + year + "; month: " + month);
 		String direction = dataFolderString + "/"
 				+ jsonObject.getString("dataName") + ".xls";
 		ExcelFileManager excelFileManager = new ExcelFileManager("HSSF",
 				direction, year + "");
 
 		JSONArray nameArray = jsonObject.getJSONArray("nameArray");
-		System.out.println("nameArray: "+jsonObject.getJSONArray("nameArray"));
+		System.out
+				.println("nameArray: " + jsonObject.getJSONArray("nameArray"));
 		JSONArray dataArray = jsonObject.getJSONArray("dataArray");
-		System.out.println("dataArray: "+jsonObject.getJSONArray("dataArray"));
+		System.out
+				.println("dataArray: " + jsonObject.getJSONArray("dataArray"));
 		JSONArray posArray = dataPositionJson.getJSONArray("posByteArray");
-		System.out.println("posArray: "+posArray.toString());
+		System.out.println("posArray: " + posArray.toString());
 
 		DataManager dataManager = new DataManager(nameArray, dataArray,
 				posArray, month);
@@ -251,7 +257,7 @@ public class EMServer extends HttpServlet {
 			throws IOException {
 		System.out.println("updateConfigs of " + jsonObject.toString());
 		String file = positionFolderString + "/"
-				+ jsonObject.getString("dataName")+dataExtetsion;
+				+ jsonObject.getString("dataName") + dataExtetsion;
 		jsonObject.remove("command");
 
 		// JSONArray nameArray = jsonObject.getJSONArray("nameArray");

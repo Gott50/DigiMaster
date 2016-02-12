@@ -1,11 +1,7 @@
 package de.tmgdx.em.gui.screeens;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.HttpMethods;
-import com.badlogic.gdx.Net.HttpRequest;
 import com.badlogic.gdx.Net.HttpResponse;
-import com.badlogic.gdx.Net.HttpResponseListener;
-import com.badlogic.gdx.net.HttpRequestHeader;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -14,9 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
 
 import de.tmgdx.em.Constants;
 
@@ -64,7 +58,6 @@ public class Input_Stack extends Stack {
 					nameArray.add(label.getText().toString());
 				}
 				submitDataToServer(new EMData(dataName, nameArray, dataArray));
-				// submitData(textArray);
 			}
 		});
 		return btnSubmit;
@@ -93,12 +86,6 @@ public class Input_Stack extends Stack {
 		}.sendRequest();
 	}
 
-	private String dataToJsonString(Object data) {
-		Json json = new Json();
-		Gdx.app.log("dataToJson", json.prettyPrint(data));
-		return json.toJson(data);
-	}
-
 	class EMData {
 		private String command = "uploadData", dataName;
 		private Array<String> nameArray, dataArray;
@@ -108,24 +95,6 @@ public class Input_Stack extends Stack {
 			this.dataName = dataName;
 			this.nameArray = nameArray;
 			this.dataArray = dataArray;
-		}
-	}
-
-	class EMData2 {
-		private Array<String> numbers = new Array<String>();
-		private String[] namesArray;
-
-		public EMData2(Array<String> nameArray, Array<String> dataArray) {
-			// Just a Stub
-			numbers.add("206-555-1234");
-			numbers.add("425-555-4321");
-			numbers.add(":Test::");
-
-			namesArray = new String[nameArray.size];
-			for (int i = 0; i < namesArray.length; i++) {
-				namesArray[i] = nameArray.get(i);
-				System.out.println(i + ": " + namesArray[i]);
-			}
 		}
 	}
 }

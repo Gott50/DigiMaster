@@ -85,30 +85,12 @@ public class Input_Stack extends Stack {
 	}
 
 	private void submitDataToServer(Object data) {
-		final HttpRequest request = new HttpRequest(HttpMethods.POST);
-		request.setUrl(StackEnum.SERVER_URL);
-		request.setHeader(HttpRequestHeader.ContentType,
-				StackEnum.COMUNICATION_FORMAT);
-		request.setContent(new Json().toJson(data));
-
-		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
+		new HttpRequestHelper(HttpMethods.POST,data){
 			@Override
-			public void handleHttpResponse(HttpResponse httpResponse) {
-				StackEnum.isExpectedStatus(httpResponse);
+			protected void handleResponse(HttpResponse httpResponse) {
+				//TODO submit data Stuff
 			}
-
-			@Override
-			public void failed(Throwable t) {
-				Gdx.app.error("HttpRequest", "something went wrong", t);
-			}
-
-			@Override
-			public void cancelled() {
-				Gdx.app.log("Cancelled",
-						"sendHttpRequest " + request.getMethod());
-			}
-		});
-
+		}.sendRequest();
 	}
 
 	private String dataToJsonString(Object data) {

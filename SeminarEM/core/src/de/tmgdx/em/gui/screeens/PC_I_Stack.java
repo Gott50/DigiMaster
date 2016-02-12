@@ -157,45 +157,26 @@ public class PC_I_Stack extends Stack {
 	}
 
 	private void saveConfigs() {
-		// set the HttpMethod | final could cause an Error
-		final HttpRequest request = new HttpRequest(HttpMethods.POST);
-		// set the Url
-		request.setUrl("http://localhost:8080/SeminarEM_Tomcat/EMServer");
-		// Be sure to set the Content-Type header for POST requests
-		request.setHeader(HttpRequestHeader.ContentType, "application/json"); // application/x-www-form-urlencoded
-		// set the content
-		request.setContent(dataToJsonString(new JsonData(dataNameTextField
-				.getText(), posTextFieldArray2D, nameTextFieldArray)));
-
-		// send the HttpRequest
-		Gdx.net.sendHttpRequest(request, new HttpResponseListener() {
+		new HttpRequestHelper(HttpMethods.POST,new JsonData(dataNameTextField
+				.getText(), posTextFieldArray2D, nameTextFieldArray)){
 			@Override
-			public void handleHttpResponse(HttpResponse httpResponse) {
-				Gdx.app.log("Status code", ""
-						+ httpResponse.getStatus().getStatusCode());
-				Gdx.app.log("Result", httpResponse.getResultAsString());
+			protected void handleResponse(HttpResponse httpResponse) {
+				//TODO save local configs + rerender
 			}
-
-			@Override
-			public void failed(Throwable t) {
-				Gdx.app.error("HttpRequest", "something went wrong", t);
-			}
-
-			@Override
-			public void cancelled() {
-				Gdx.app.log("Cancelled",
-						"sendHttpRequest " + request.getMethod());
-			}
-		});
+		}.sendRequest();
 	}
 
 	class JsonData {
+		private String command = "updateConfigs";
 		private Array<String> nameArray;
 		private byte[] posByteArray;
+		private String dataName;
 
 		public JsonData(String dataName,
 				Array<Array<TextField>> posTextFieldArray2D,
 				Array<TextField> nameTextFieldArray) {
+			this.dataName = dataName;
+			
 			this.nameArray = new Array<String>();
 			for (TextField textField : nameTextFieldArray) {
 				nameArray.add(textField.getText());

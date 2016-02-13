@@ -16,14 +16,13 @@ public abstract class HttpRequestHelper extends HttpRequest {
 	public HttpRequestHelper() {
 		super(HttpMethods.GET);
 		this.setUrl(SERVER_URL);
-		this.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
 	}
 
 	public HttpRequestHelper(String httpMethod,HttpContentObject content) {
 		super(httpMethod);
 		this.setUrl(SERVER_URL);
 		this.setHeader(HttpRequestHeader.ContentType, COMUNICATION_FORMAT);
-		System.out.println(new Json().prettyPrint(content));
+		System.out.println(new Json().prettyPrint(content));//TODO
 		this.setContent(new Json().toJson(content));
 	}
 

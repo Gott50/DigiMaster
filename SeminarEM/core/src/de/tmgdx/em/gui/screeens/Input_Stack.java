@@ -79,8 +79,8 @@ public class Input_Stack extends Stack {
 		return table;
 	}
 
-	private void submitDataToServer(HttpContentObject data) {
-		new HttpRequestHelper(HttpMethods.POST, data) {
+	private void submitDataToServer(HttpContentObject content) {
+		new HttpRequestHelper(HttpMethods.POST, content) {
 			@Override
 			protected void handleResponse(HttpResponse httpResponse) {
 				// TODO submit data Stuff

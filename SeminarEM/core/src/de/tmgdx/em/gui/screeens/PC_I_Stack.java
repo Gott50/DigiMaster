@@ -165,21 +165,6 @@ public class PC_I_Stack extends Stack {
 		}.sendRequest();
 	}
 
-	/*
-	 * class JsonData { // FIXME private String command = "updateConfigs";
-	 * private Array<String> nameArray; private byte[] posByteArray; private
-	 * String dataName;
-	 * 
-	 * public JsonData(String dataName, Array<Array<TextField>>
-	 * posTextFieldArray2D, Array<TextField> nameTextFieldArray) { this.dataName
-	 * = dataName;
-	 * 
-	 * this.nameArray = new Array<String>(); for (TextField textField :
-	 * nameTextFieldArray) { nameArray.add(textField.getText()); }
-	 * this.posByteArray = textFieldArray2DToByteArray(posTextFieldArray2D); }
-	 * }//
-	 */
-
 	private Array<String>[] generateConfigDataset(
 			Array<Array<TextField>> posTextFieldArray2D,
 			Array<TextField> nameTextFieldArray) {

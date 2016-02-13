@@ -259,12 +259,12 @@ public class EMServer extends HttpServlet {
 		System.out.println("updateConfigs of " + jsonObject.toString());
 		String file = positionFolderString + "/"
 				+ jsonObject.getString("dataName") + dataExtetsion;
-		jsonObject.remove("command");
+//		jsonObject.remove("command");
 
 		// JSONArray nameArray = jsonObject.getJSONArray("nameArray");
 		// JSONArray posByteArray = jsonObject.getJSONArray("posByteArray");
 
-		saveJsonObjectInFile(file, jsonObject);
+		saveJsonObjectInFile(file, jsonObject.getJSONObject("content"));
 		response.getWriter().println("Configs saved at: " + file);
 	}
 

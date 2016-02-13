@@ -2,14 +2,12 @@ package de.tmgdx.em.gui.screeens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.HttpMethods;
-import com.badlogic.gdx.Net.HttpRequest;
 import com.badlogic.gdx.Net.HttpResponse;
-import com.badlogic.gdx.Net.HttpResponseListener;
-import com.badlogic.gdx.net.HttpRequestHeader;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Json;
+
+import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
 public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasser"),
 	PC_I("Control");
@@ -171,7 +169,7 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 
 	private static Stack loadStackDataFromServer(String dataName, Skin skin) {
 		// TODO make it more elegant: load all data needed when Started
-		HttpRequestHelper request = new HttpRequestHelper(HttpMethods.POST,new LoadCommant(dataName)){
+		HttpRequestHelper request = new HttpRequestHelper(HttpMethods.POST,new HttpContentObject(Command.LOAD, dataName)){
 			@Override
 			protected void handleResponse(HttpResponse httpResponse) {
 				setStackDataFromServer(generateStackData(httpResponse));
@@ -191,13 +189,14 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 				(String[]) stackDataFromServer.toArray(String.class));
 		// TODO save StackData local
 	}
+	/*
 	static class LoadCommant{
+		//FIXME out source 
 		private String command = "loadDataName", dataName;
 		public LoadCommant(String dataName) {
 			this.dataName = dataName;
 		}
-		
-	}
+	}*/
 
 	private static Array<String> generateStackData(HttpResponse httpResponse) {
 		Array<String> strArray = new Array<String>();

@@ -133,7 +133,7 @@ public class MainScreen extends AbstractScreen {
 				public void changed(ChangeEvent event, Actor actor) {
 					mainStack = stacksArray[STACK_NUM];
 					
-					rebuildStage();
+					rebuildStage();//FIXME false stack is build
 				}
 			});
 		}

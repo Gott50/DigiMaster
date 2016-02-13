@@ -2,10 +2,7 @@ package de.tmgdx.em.gui.screeens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Net.HttpMethods;
-import com.badlogic.gdx.Net.HttpRequest;
 import com.badlogic.gdx.Net.HttpResponse;
-import com.badlogic.gdx.Net.HttpResponseListener;
-import com.badlogic.gdx.net.HttpRequestHeader;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Stack;
@@ -17,6 +14,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 
 import de.tmgdx.em.Constants;
+import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
 public class PC_I_Stack extends Stack {
 	// TODO Add Units
@@ -157,32 +155,45 @@ public class PC_I_Stack extends Stack {
 	}
 
 	private void saveConfigs() {
-		new HttpRequestHelper(HttpMethods.POST,new JsonData(dataNameTextField
-				.getText(), posTextFieldArray2D, nameTextFieldArray)){
+		new HttpRequestHelper(HttpMethods.POST, new HttpContentObject(
+				Command.CONFIG, dataNameTextField.getText(),
+				generateConfigDataset(posTextFieldArray2D, nameTextFieldArray))) {
 			@Override
 			protected void handleResponse(HttpResponse httpResponse) {
-				//TODO save local configs + rerender
+				// TODO save local configs + rerender
 			}
 		}.sendRequest();
 	}
 
-	class JsonData {
-		private String command = "updateConfigs";
-		private Array<String> nameArray;
-		private byte[] posByteArray;
-		private String dataName;
+	/*
+	 * class JsonData { // FIXME private String command = "updateConfigs";
+	 * private Array<String> nameArray; private byte[] posByteArray; private
+	 * String dataName;
+	 * 
+	 * public JsonData(String dataName, Array<Array<TextField>>
+	 * posTextFieldArray2D, Array<TextField> nameTextFieldArray) { this.dataName
+	 * = dataName;
+	 * 
+	 * this.nameArray = new Array<String>(); for (TextField textField :
+	 * nameTextFieldArray) { nameArray.add(textField.getText()); }
+	 * this.posByteArray = textFieldArray2DToByteArray(posTextFieldArray2D); }
+	 * }//
+	 */
 
-		public JsonData(String dataName,
-				Array<Array<TextField>> posTextFieldArray2D,
-				Array<TextField> nameTextFieldArray) {
-			this.dataName = dataName;
-			
-			this.nameArray = new Array<String>();
-			for (TextField textField : nameTextFieldArray) {
-				nameArray.add(textField.getText());
-			}
-			this.posByteArray = textFieldArray2DToByteArray(posTextFieldArray2D);
+	private Array<String>[] generateConfigDataset(
+			Array<Array<TextField>> posTextFieldArray2D,
+			Array<TextField> nameTextFieldArray) {
+		Array<String> nameArray = new Array<String>();
+		for (TextField textField : nameTextFieldArray) {
+			nameArray.add(textField.getText());
 		}
+		byte[] posByteArray = textFieldArray2DToByteArray(posTextFieldArray2D);
+		Array<String> dataArray = new Array<String>();
+		for (byte b : posByteArray) {
+			dataArray.add(b + "");
+		}
+
+		return new Array[] { nameArray, dataArray };
 	}
 
 	private String dataToJsonString(Object data) {

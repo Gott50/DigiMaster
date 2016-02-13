@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Array;
 
 import de.tmgdx.em.Constants;
+import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
 public class Input_Stack extends Stack {
 	private Array<Label> labelArray;
@@ -57,7 +58,8 @@ public class Input_Stack extends Stack {
 				for (Label label : labelArray) {
 					nameArray.add(label.getText().toString());
 				}
-				submitDataToServer(new EMData(dataName, nameArray, dataArray));
+				submitDataToServer(new HttpContentObject(Command.DATA,dataName, nameArray,
+						dataArray));
 			}
 		});
 		return btnSubmit;
@@ -77,24 +79,21 @@ public class Input_Stack extends Stack {
 		return table;
 	}
 
-	private void submitDataToServer(Object data) {
-		new HttpRequestHelper(HttpMethods.POST,data){
+	private void submitDataToServer(HttpContentObject data) {
+		new HttpRequestHelper(HttpMethods.POST, data) {
 			@Override
 			protected void handleResponse(HttpResponse httpResponse) {
-				//TODO submit data Stuff
+				// TODO submit data Stuff
 			}
 		}.sendRequest();
 	}
 
-	class EMData {
-		private String command = "uploadData", dataName;
-		private Array<String> nameArray, dataArray;
-
-		public EMData(String dataName, Array<String> nameArray,
-				Array<String> dataArray) {
-			this.dataName = dataName;
-			this.nameArray = nameArray;
-			this.dataArray = dataArray;
-		}
-	}
+	/*
+	 * class EMData { //FIXME out source private String command = "uploadData",
+	 * dataName; private Array<String> nameArray, dataArray;
+	 * 
+	 * public EMData(String dataName, Array<String> nameArray, Array<String>
+	 * dataArray) { this.dataName = dataName; this.nameArray = nameArray;
+	 * this.dataArray = dataArray; } }//
+	 */
 }

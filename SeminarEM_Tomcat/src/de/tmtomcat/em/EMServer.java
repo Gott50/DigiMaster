@@ -167,7 +167,7 @@ public class EMServer extends HttpServlet {
 			JSONObject jsonObject) throws IOException {
 		// load dataPositionJson for the position
 		String dataPositionFile = positionFolderString + "/"
-				+ jsonObject.getString("dataName") + dataExtetsion;
+				+ jsonObject.getString("dataName") + dataExtetsion; //
 		dataPositionJson = createJsonObjectFromFile(dataPositionFile, null);
 		System.out.println("loaded: " + dataPositionJson);
 		JSONArray nameJsonArray = dataPositionJson.getJSONArray("nameArray");
@@ -231,12 +231,13 @@ public class EMServer extends HttpServlet {
 		ExcelFileManager excelFileManager = new ExcelFileManager("HSSF",
 				direction, year + "");
 
-		JSONArray nameArray = jsonObject.getJSONArray("nameArray");
+		JSONObject content = jsonObject.getJSONObject("content");
+		JSONArray nameArray = content.getJSONArray("nameArray");
 		System.out
-				.println("nameArray: " + jsonObject.getJSONArray("nameArray"));
-		JSONArray dataArray = jsonObject.getJSONArray("dataArray");
+				.println("nameArray: " + content.getJSONArray("nameArray"));
+		JSONArray dataArray = content.getJSONArray("dataArray");
 		System.out
-				.println("dataArray: " + jsonObject.getJSONArray("dataArray"));
+				.println("dataArray: " + content.getJSONArray("dataArray"));
 		JSONArray posArray = dataPositionJson.getJSONArray("posByteArray");
 		System.out.println("posArray: " + posArray.toString());
 

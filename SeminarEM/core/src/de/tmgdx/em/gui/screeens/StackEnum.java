@@ -189,14 +189,6 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 				(String[]) stackDataFromServer.toArray(String.class));
 		// TODO save StackData local
 	}
-	/*
-	static class LoadCommant{
-		//FIXME out source 
-		private String command = "loadDataName", dataName;
-		public LoadCommant(String dataName) {
-			this.dataName = dataName;
-		}
-	}*/
 
 	private static Array<String> generateStackData(HttpResponse httpResponse) {
 		Array<String> strArray = new Array<String>();

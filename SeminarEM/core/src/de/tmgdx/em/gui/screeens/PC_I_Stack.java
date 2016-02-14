@@ -17,24 +17,13 @@ import de.tmgdx.em.Constants;
 import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
 public class PC_I_Stack extends Stack {
-	// TODO Add Units
-	private Array<Array<TextField>> posTextFieldArray2D = new Array<Array<TextField>>();
-	private Array<TextField> nameTextFieldArray = new Array<TextField>();
+	private Array<Array<TextField>> posTextFieldArray2D;
+	private Array<TextField> nameTextFieldArray;
 	private TextField dataNameTextField;
-	private Skin skin = null;
 
 	public PC_I_Stack(Skin skin) {
-		// this.skin = skin;
 		init(skin);
 	}
-
-	/*
-	 * private void readConfigs() { //TODO String fileString = "test";
-	 * FileHandle fileBin = Gdx.files.local(fileString+".bin"); for (byte
-	 * textField : fileBin.readBytes()) {
-	 * 
-	 * } fileBin.readBytes(); }
-	 */
 
 	private String textFieldArrayToString(Array<TextField> nameTextFieldArray) {
 		String string = "";
@@ -65,29 +54,60 @@ public class PC_I_Stack extends Stack {
 	}
 
 	private void init(final Skin skin) {
-		if (nameTextFieldArray.size == 0)
-			nameTextFieldArray.add(new TextField("Name", skin));
-		if (posTextFieldArray2D.size == 0)
-			posTextFieldArray2D.add(new Array<TextField>());
+		this.clear();
+		this.setSize(
+				Constants.VIEWPORT_GUI_WIDTH * (1 - StackEnum.CON_PORTION),
+				Constants.VIEWPORT_GUI_HEIGHT);
+		this.setPosition(Constants.VIEWPORT_GUI_WIDTH * StackEnum.CON_PORTION,
+				0);
 
-		// TODO convert letters to numbers
-		TextButton btnSave = new TextButton("Save", skin);
-		btnSave.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				saveConfigs();
-			}
-		});
+		posTextFieldArray2D = new Array<Array<TextField>>();
+		nameTextFieldArray = new Array<TextField>();
+		nameTextFieldArray.add(new TextField("Name", skin));
+		posTextFieldArray2D.add(new Array<TextField>());
+
+		Table table = buildCoordinatTabel(skin, buildAddVarButton(skin));
+		table.add().row();
+		table.add(buildAddPosButton(skin));
+		table.add(buildSaveButton(skin));
+		this.add(table);
+	}
+
+	private Table buildCoordinatTabel(final Skin skin, TextButton btnAddVar) {
+		Table table = new Table();
+		dataNameTextField = new TextField("dataName", skin);
+		table.add(dataNameTextField).row();
+
+		for (int i = 0; i < nameTextFieldArray.size; i++) {
+			table.add(nameTextFieldArray.get(i));
+		}
+		table.add(btnAddVar);
+		for (Array<TextField> posTextFieldArray : posTextFieldArray2D) {
+			table.row();
+			for (int i = 0; i < nameTextFieldArray.size; i++)
+				table.add(getPosTextField(skin, posTextFieldArray, i));
+		}
+		return table;
+	}
+
+	private TextField getPosTextField(final Skin skin,
+			Array<TextField> posTextFieldArray, int index) {
+		TextField posTextField = null;
+		if (posTextFieldArray.size > index)
+			posTextField = posTextFieldArray.get(index);
+		else {
+			posTextField = new TextField(generateCoordinate(), skin); // Position
+			posTextFieldArray.add(posTextField);
+		}
+		return posTextField;
+	}
+
+	private String generateCoordinate() {
 		// TODO add smart addition like in Excel
-		TextButton btnAddPos = new TextButton("+", skin);
-		btnAddPos.addListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor) {
-				posTextFieldArray2D.add(new Array<TextField>());
-				init(skin);
-			}
-		});
-		// TODO add smart addition like in Excel
+		return "1:1";
+	}
+
+	private TextButton buildAddVarButton(final Skin skin) {
 		TextButton btnAddVar = new TextButton("+", skin);
 		btnAddVar.addListener(new ChangeListener() {
 			@Override
@@ -96,62 +116,30 @@ public class PC_I_Stack extends Stack {
 				init(skin);
 			}
 		});
+		return btnAddVar;
+	}
 
-		Table table = new Table();
-		// add dataTypeTextField to Table
-		if (dataNameTextField == null)
-			dataNameTextField = new TextField("dataName", skin);
-		table.add(dataNameTextField).row();
-
-		/*
-		 * // add Labels and TextField to the Table and Array for (int i = 0; i
-		 * < nameTextFieldArray.size; i++) { // add TextField to the Table from
-		 * Array table.add(nameTextFieldArray.get(i)); // add "in" Label to the
-		 * Table Label lable = new Label(" in ", skin); table.add(lable); // add
-		 * TextField to the Table and Array TextField txtField = null; if
-		 * (posTextFieldArray.size > i) txtField = posTextFieldArray.get(i);
-		 * else { txtField = new TextField("Position", skin);
-		 * posTextFieldArray.add(txtField); } table.add(txtField).width(100);
-		 * table.row(); }
-		 */
-
-		// add NameTextFields to the Table
-		for (int i = 0; i < nameTextFieldArray.size; i++) {
-			// add TextField to the Table from Array
-			table.add(nameTextFieldArray.get(i));
-		}
-		// add AddVarButton to the Table
-		table.add(btnAddVar);
-		// add PosTextFields to the Table and Array
-		for (Array<TextField> posTextFieldArray : posTextFieldArray2D) {
-			table.row();
-			for (int i = 0; i < nameTextFieldArray.size; i++) {
-				// add TextField to the Table and Array
-				TextField posTextField = null;
-				if (posTextFieldArray.size > i)
-					posTextField = posTextFieldArray.get(i);
-				else {
-					posTextField = new TextField("1:1", skin); // Position
-					posTextFieldArray.add(posTextField);
-				}
-				table.add(posTextField);
+	private TextButton buildAddPosButton(final Skin skin) {
+		TextButton btnAddPos = new TextButton("+", skin);
+		btnAddPos.addListener(new ChangeListener() {
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				posTextFieldArray2D.add(new Array<TextField>());
+				init(skin);
 			}
-		}
+		});
+		return btnAddPos;
+	}
 
-		// add Buttons to Table
-		table.add().row();
-		table.add(btnAddPos);
-		// TODO put SaveButton always left
-		table.add(btnSave);
-
-		// add Table to Stack
-		this.clear();
-		this.setSize(
-				Constants.VIEWPORT_GUI_WIDTH * (1 - StackEnum.CON_PORTION),
-				Constants.VIEWPORT_GUI_HEIGHT);
-		this.setPosition(Constants.VIEWPORT_GUI_WIDTH * StackEnum.CON_PORTION,
-				0);
-		this.add(table);
+	private TextButton buildSaveButton(final Skin skin) {
+		TextButton btnSave = new TextButton("Save", skin);
+		btnSave.addListener(new ChangeListener() {
+			@Override
+			public void changed(ChangeEvent event, Actor actor) {
+				saveConfigs();
+			}
+		});
+		return btnSave;
 	}
 
 	private void saveConfigs() {

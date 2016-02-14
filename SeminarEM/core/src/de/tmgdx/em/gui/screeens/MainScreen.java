@@ -51,7 +51,7 @@ public class MainScreen extends AbstractScreen {
 			debugRebuildStage -= deltaTime;
 			if (debugRebuildStage <= 0) {
 				debugRebuildStage = DEBUG_REBUILD_INTERVAL;
-				init();
+				show();
 			}
 		}
 		stage.act(deltaTime);
@@ -61,41 +61,35 @@ public class MainScreen extends AbstractScreen {
 
 	@Override
 	public void resize(int width, int height) {
-		// stage.getViewport().update((int) Constants.VIEWPORT_GUI_WIDTH,(int)
-		// Constants.VIEWPORT_GUI_HEIGHT, false);
+		// FIXME Anchor top left corner + scroll bar
+		stage.getViewport().update((int) Constants.VIEWPORT_GUI_WIDTH,
+				(int) Constants.VIEWPORT_GUI_HEIGHT, false);
 		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
-		init();
-	}
-
-	private void init() {
 		stage = new Stage();
 		skinLibgdx = new Skin(Gdx.files.internal(Constants.SKIN_LIBGDX_UI),
 				new TextureAtlas(Constants.TEXTURE_ATLAS_LIBGDX_UI));
-		// generates the Stacks
+
 		StackEnum.generateStack(skinLibgdx);
 
-		// assemble stage for menu screen
-		rebuildStage();
+		rebuildStage(mainStack);
 	}
-	
-	private void rebuildStage() {
+
+	private void rebuildStage(Stack mainStack) {
 		stage.clear();
 		stage.addActor(buildControlsStack());
-		if(mainStack != null)
-		stage.addActor(buildMainStack());
+		if (mainStack != null)
+			stage.addActor(buildMainStack(mainStack));
 	}
 
-	private Stack mainStack;//  = StackEnum.PC_I.getStack()
+	private Stack mainStack;
 
-	private Stack buildMainStack() {
-		Stack stack = mainStack;//.getStack()
-		stack.setSize(
-				Constants.VIEWPORT_GUI_WIDTH * (1 - StackEnum.CON_PORTION),
-				Constants.VIEWPORT_GUI_HEIGHT);
+	private Stack buildMainStack(Stack stack) {
+		stack.setSize(Constants.VIEWPORT_GUI_WIDTH
+				* (1 - StackEnum.CON_PORTION), Constants.VIEWPORT_GUI_HEIGHT);
 		stack.setPosition(Constants.VIEWPORT_GUI_WIDTH * StackEnum.CON_PORTION,
 				0);
 		return stack;
@@ -108,36 +102,20 @@ public class MainScreen extends AbstractScreen {
 
 		VerticalGroup vertGroup = new VerticalGroup();
 		vertGroup.left();
-
-		/*for (final StackEnum stack : StackEnum.values()) {
-			TextButton btnSwitchScreen = new TextButton(stack.toString(),
-					skinLibgdx);
-			vertGroup.addActor(btnSwitchScreen);
-			btnSwitchScreen.addListener(new ChangeListener() {
-				@Override
-				public void changed(ChangeEvent event, Actor actor) {
-					mainStack = stack;
-					rebuildStage();
-				}
-			});
-		}*/
-		String[] namesArray = StackEnum.getNames();
-		final Stack[] stacksArray = StackEnum.getStacks(skinLibgdx);
-		for (int i = 0; i < namesArray.length; i++) {
-			TextButton btnSwitchScreen = new TextButton(namesArray[i],
+		
+		for (int i = 0; i < StackEnum.getNames().length; i++) {
+			TextButton btnSwitchScreen = new TextButton(StackEnum.getNames()[i],
 					skinLibgdx);
 			vertGroup.addActor(btnSwitchScreen);
 			final int STACK_NUM = i;
 			btnSwitchScreen.addListener(new ChangeListener() {
 				@Override
 				public void changed(ChangeEvent event, Actor actor) {
-					mainStack = stacksArray[STACK_NUM];
-					
-					rebuildStage();//FIXME false stack is build
+					rebuildStage(StackEnum.getStacks(skinLibgdx)[STACK_NUM]);// FIXME false stack is build
 				}
 			});
 		}
-		
+
 		conStack.add(vertGroup);
 
 		return conStack;

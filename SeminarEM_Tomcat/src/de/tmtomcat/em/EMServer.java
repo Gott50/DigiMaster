@@ -7,7 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Calendar;
-import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -27,10 +26,14 @@ import de.tmtomcat.em.DataManager.Data;
  */
 @WebServlet(description = "Energy Management Server", urlPatterns = { "/EMServer" })
 public class EMServer extends HttpServlet {
+	private static final String EXC_DATA_TYPE = "HSSF";
+	private static final String EXC_DATA_EXT = ".xls";
 	private static final long serialVersionUID = 1L;
-	private String userDataFolderString;
-	private String positionFolderString;
-	private String dataFolderString;
+	private static final JSONObject standardJsonObject = null;
+	private static final String POSDATA_EXT = ".txt";
+	private String userDataFolder;
+	private String positionFolder;
+	private String dataFolder;
 
 	@Override
 	public void destroy() {
@@ -41,87 +44,63 @@ public class EMServer extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		// creating Folders and Strings
-		userDataFolderString = getServletContext().getRealPath("/UserData");// FIXME
-																			// Path
-																			// cases
-																			// Bad
-																			// Bugs!!!
+		makeFolders();
+	}
+
+	private void makeFolders() {
+		userDataFolder = getServletContext().getRealPath("/UserData");
 		System.out.println("cretated new UserDataFoler? "
-				+ new File(userDataFolderString).mkdir());
-		positionFolderString = userDataFolderString + "/Positions";
+				+ new File(userDataFolder).mkdir());
+		positionFolder = userDataFolder + "/Positions";
 		System.out.println("cretated new PositionFolder? "
-				+ new File(positionFolderString).mkdir());
-		dataFolderString = userDataFolderString + "/Data";
+				+ new File(positionFolder).mkdir());
+		dataFolder = userDataFolder + "/Data";
 		System.out.println("cretated new DataFolderString? "
-				+ new File(dataFolderString).mkdir());
+				+ new File(dataFolder).mkdir());
 	}
 
-	JSONObject dataPositionJson;
-
-	/**
-	 * @see HttpServlet#HttpServlet()
-	 */
-	public EMServer() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-
-	private JSONObject createJsonObjectFromFile(String file,
-			JSONObject standardJsonObject) {
-		System.out.println("create Json form:" + file);
+	private JSONObject createJsonObjectFromFile(String filePath) {
+		System.out.println("create Json form:" + filePath);
 		JSONObject jsonObject = null;
-		// Load the file
-		FileReader fileReader = null;
 		BufferedReader bufferedReader = null;
-		PrintWriter writer = null;
 		try {
-			File f = new File(file);
+			File f = new File(filePath);
 			if (!f.exists()) {
-				// creates new standard File //TODO make it better!!!
-				System.out.println("File not exists: " + file);
-				jsonObject = standardJsonObject != null ? standardJsonObject
-						: dataPositionJson;
-				// TODO test it!
-				writer = new PrintWriter(new FileWriter(f));
-				jsonObject.write(writer);
-
-				if (writer != null) {
-					writer.close();
-				}
+				System.out.println("File not exists: " + filePath);
+				writeJSONtoFile(filePath, standardJsonObject);
+				jsonObject = standardJsonObject;
 			} else {
-				fileReader = new FileReader(f);
-				bufferedReader = new BufferedReader(fileReader);
-
-				// create JSONObject form bufferedReader
-				StringBuffer jb = new StringBuffer();
-				String line = null;
-				try {
-					while ((line = bufferedReader.readLine()) != null)
-						jb.append(line);
-				} catch (Exception e) { /* report an error */
-				}
-
-				try {
-					jsonObject = new JSONObject(jb.toString());
-				} catch (JSONException e) {
-					// crash and burn
-					throw new JSONException("Error parsing JSON request string");
-				}
+				bufferedReader = new BufferedReader(new FileReader(f));
+				jsonObject = createJson(bufferedReader);
 			}
-
-		} catch (Exception ex) {
-			if (writer != null) {
-				writer.close();
-			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
 		}
-		if (bufferedReader != null) {
+
+		return jsonObject;
+	}
+
+	private JSONObject createJson(BufferedReader bufferedReader) {
+		StringBuffer jb = new StringBuffer();
+		String line = null;
+		JSONObject jsonObject;
+		try {
+			while ((line = bufferedReader.readLine()) != null)
+				jb.append(line);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		try {
+			jsonObject = new JSONObject(jb.toString());
+		} catch (JSONException e) {
+			throw new JSONException("Error parsing JSON request string");
+		}
+		if (bufferedReader != null)
 			try {
 				bufferedReader.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
 		return jsonObject;
 	}
 
@@ -132,54 +111,18 @@ public class EMServer extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Request: " + request.getReader().readLine());
-		/*
-		 * try { JSONObject jsonObject = createJsonFromRequest(request);
-		 * System.out.println("JsonObject created: " + jsonObject.toString());
-		 * if (jsonObject.getString("command") == "loadDataName") {
-		 * sendDataNameInfo(response, jsonObject);
-		 * 
-		 * return; } } catch (JSONException e) { System.err.println(e); }
-		 */
-
-		// response.getWriter().println("positionFolder");
-
-		File folder = new File(positionFolderString);
-		File[] listOfFiles = folder.listFiles();
-		for (File file : listOfFiles) {
+		for (File file : new File(positionFolder).listFiles()) {
 			if (file.isFile()) {
-				// response.getWriter().println("File: " + file.getName());
-				response.getWriter().print("File: " + file.getName());
-				/*
-				 * BufferedReader bReader = new BufferedReader(new
-				 * FileReader(file)); while (true){ String line =
-				 * bReader.readLine(); if (line == null) break;
-				 * response.getWriter().println(line); }
-				 */
+				setResponse(response, "File: " + file.getName());
 			} else if (file.isDirectory()) {
-				// response.getWriter().println("Dire: " + file.getName());
+//				 response.getWriter().println("Dir: " + file.getName());
 			}
 		}
 	}
 
-	private final String dataExtetsion = ".txt";
-
-	private void sendDataNameInfo(HttpServletResponse response,
-			JSONObject jsonObject) throws IOException {
-		// load dataPositionJson for the position
-		String dataPositionFile = positionFolderString + "/"
-				+ jsonObject.getString("dataName") + dataExtetsion; //
-		dataPositionJson = createJsonObjectFromFile(dataPositionFile, null);
-		System.out.println("loaded: " + dataPositionJson);
-		JSONArray nameJsonArray = dataPositionJson.getJSONArray("nameArray");
-
-		/*
-		 * int length = nameJsonArray.length(); String[] nameStringArray = new
-		 * String[length]; for (int i = 0; i < length; i++) { nameStringArray[i]
-		 * = nameJsonArray.getString(i); }
-		 */
-
-		response.setContentType("application/json");
-		response.getWriter().println(nameJsonArray.toString());
+	private void setResponse(HttpServletResponse response, String string)
+			throws IOException {
+		response.getWriter().print(string);
 	}
 
 	/**
@@ -191,126 +134,100 @@ public class EMServer extends HttpServlet {
 		JSONObject jsonObject = createJsonFromRequest(request);
 		System.out.println("JsonObject created: " + jsonObject.toString());
 
-		String command = null;
 		try {
-			command = jsonObject.getString("command");
+			switch (jsonObject.getString("command")) {
+			case "updateConfigs":
+				updateConfigs(request, response, jsonObject);
+				break;
+			case "uploadData":
+				uploadData(request, response, jsonObject);
+				break;
+			case "loadDataName":
+				sendDataNameInfo(response, jsonObject);
+				break;
+			default:
+				response.getWriter().println(
+						"Unknown command: " + jsonObject.getString("command"));
+				break;
+			}
 		} catch (JSONException e) {
 			throw new JSONException("no command found: " + e);
 		}
+	}
 
-		switch (command) {
-		case "updateConfigs":
-			updateConfigs(request, response, jsonObject);
-			break;
-		case "uploadData":
-			uploadData(request, response, jsonObject);
-			break;
-		case "loadDataName":
-			sendDataNameInfo(response, jsonObject);
-			break;
-		default:
-			response.getWriter().println("Unknown command: " + command);
-			break;
-		}
+	/**
+	 * load dataPositionJson for the position and send it to client
+	 */
+	private void sendDataNameInfo(HttpServletResponse response,
+			JSONObject jsonObject) throws IOException {
+		System.out.println("loaded: "
+				+ createJsonObjectFromFile(positionFolder + "/"
+						+ jsonObject.getString("dataName") + POSDATA_EXT));
+		JSONArray nameJsonArray = createJsonObjectFromFile(
+				positionFolder + "/" + jsonObject.getString("dataName")
+						+ POSDATA_EXT).getJSONArray("nameArray");
+		response.setContentType("application/json");
+		response.getWriter().println(nameJsonArray.toString());
 	}
 
 	private void uploadData(HttpServletRequest request,
 			HttpServletResponse response, JSONObject jsonObject)
 			throws JSONException, IOException {
-		// load dataPositionJson for the position
-		String dataPositionFile = positionFolderString + "/"
-				+ jsonObject.getString("dataName") + dataExtetsion;
-		dataPositionJson = createJsonObjectFromFile(dataPositionFile, null);
 
-		// year is stored as a static member
-		int year = Calendar.getInstance().get(Calendar.YEAR);
-		int month = Calendar.getInstance().get(Calendar.MONTH);
-		System.out.println("using Date: year: " + year + "; month: " + month);
-		String direction = dataFolderString + "/"
-				+ jsonObject.getString("dataName") + ".xls";
-		ExcelFileManager excelFileManager = new ExcelFileManager("HSSF",
-				direction, year + "");
+		ExcelFileManager excelFileManager = new ExcelFileManager(EXC_DATA_TYPE,
+				dataFolder + "/" + jsonObject.getString("dataName")
+						+ EXC_DATA_EXT, Calendar.getInstance().get(
+						Calendar.YEAR)
+						+ "");
 
-		JSONObject content = jsonObject.getJSONObject("content");
-		JSONArray nameArray = content.getJSONArray("nameArray");
-		System.out
-				.println("nameArray: " + content.getJSONArray("nameArray"));
-		JSONArray dataArray = content.getJSONArray("dataArray");
-		System.out
-				.println("dataArray: " + content.getJSONArray("dataArray"));
-		JSONArray posArray = dataPositionJson.getJSONArray("posByteArray");
-		System.out.println("posArray: " + posArray.toString());
-
-		DataManager dataManager = new DataManager(nameArray, dataArray,
-				posArray, month);
-		for (Data data : dataManager.getDataArray()) {
+		for (Data data : new DataManager(jsonObject.getJSONObject("content")
+				.getJSONArray("nameArray"), jsonObject.getJSONObject("content")
+				.getJSONArray("dataArray"), createJsonObjectFromFile(
+				positionFolder + "/" + jsonObject.getString("dataName")
+						+ POSDATA_EXT).getJSONArray("posByteArray"), Calendar
+				.getInstance().get(Calendar.MONTH)).getDataArray()) {
 			excelFileManager.setCellString(data.row, data.column, data.data);
 		}
-
 		excelFileManager.saveWorkbook(null);
-		response.getWriter().println("Data saved at: " + direction);
-
-		// response.getWriter().println(jsonObject.toString());
 	}
 
 	private void updateConfigs(HttpServletRequest request,
 			HttpServletResponse response, JSONObject jsonObject)
 			throws IOException {
-		System.out.println("updateConfigs of " + jsonObject.toString());
-		String file = positionFolderString + "/"
-				+ jsonObject.getString("dataName") + dataExtetsion;
-//		jsonObject.remove("command");
-
-		// JSONArray nameArray = jsonObject.getJSONArray("nameArray");
-		// JSONArray posByteArray = jsonObject.getJSONArray("posByteArray");
-
-		saveJsonObjectInFile(file, jsonObject.getJSONObject("content"));
-		response.getWriter().println("Configs saved at: " + file);
+		String file = positionFolder + "/" + jsonObject.getString("dataName")
+				+ POSDATA_EXT;
+		JSONObject content = jsonObject.getJSONObject("content");
+		if (new File(file).exists()) {
+			System.err.println("File already exists");
+		} else
+			writeJSONtoFile(file, content);
 	}
 
-	private void saveJsonObjectInFile(String file, JSONObject jsonObject) {
+	private void writeJSONtoFile(String file, JSONObject content) {
+		System.out.println("Write to File: " + content.toString());
 		PrintWriter writer = null;
-		File f = new File(file);
-		if (f.exists()) {
-			System.err.println("File already exists");
-		}
 		try {
-			writer = new PrintWriter(new FileWriter(f));
-			System.out.println("Write to File: " + jsonObject.toString());
-			jsonObject.write(writer);
-
-			if (writer != null) {
-				writer.close();
-			}
+			writer = new PrintWriter(new FileWriter(new File(file)));
+			content.write(writer);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		if (writer != null)
+			writer.close();
 	}
 
-	private static JSONObject createJsonFromRequest(ServletRequest request) {
-		// TODO Not by ME
+	private static JSONObject createJsonFromRequest(ServletRequest request)
+			throws IOException {
 		StringBuffer jb = new StringBuffer();
 		String line = null;
-		try {
-			BufferedReader reader = request.getReader();
-			while ((line = reader.readLine()) != null)
-				jb.append(line);
-		} catch (Exception e) { /* report an error */
-		}
-
+		BufferedReader reader = request.getReader();
+		while ((line = reader.readLine()) != null)
+			jb.append(line);
 		try {
 			JSONObject jsonObject = new JSONObject(jb.toString());
 			return jsonObject;
 		} catch (JSONException e) {
-			// crash and burn
 			throw new JSONException("Error parsing JSON request string");
 		}
-		// Work with the data using methods like...
-		// int someInt = jsonObject.getInt("intParamName");
-		// String someString = jsonObject.getString("stringParamName");
-		// JSONObject nestedObj = jsonObject.getJSONObject("nestedObjName");
-		// JSONArray arr = jsonObject.getJSONArray("arrayParamName");
-		// etc...
 	}
 }

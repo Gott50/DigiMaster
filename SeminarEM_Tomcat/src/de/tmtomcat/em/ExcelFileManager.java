@@ -19,8 +19,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * Loads and saves an Excel File to store Data in it
  * 
- * @author timomorawitz
- *
  */
 public class ExcelFileManager {
 	private Workbook workbook;

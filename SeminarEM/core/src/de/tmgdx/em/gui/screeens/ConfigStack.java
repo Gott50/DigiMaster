@@ -16,12 +16,12 @@ import com.badlogic.gdx.utils.Json;
 import de.tmgdx.em.Constants;
 import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
-public class PC_I_Stack extends Stack {
+public class ConfigStack extends Stack {
 	private Array<Array<TextField>> posTextFieldArray2D;
 	private Array<TextField> nameTextFieldArray;
 	private TextField dataNameTextField;
 
-	public PC_I_Stack(Skin skin) {
+	public ConfigStack(Skin skin) {
 		init(skin);
 	}
 

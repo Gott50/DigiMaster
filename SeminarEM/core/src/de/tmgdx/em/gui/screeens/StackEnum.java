@@ -136,7 +136,7 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 						"Uebertragungsstation", "Hausmeister" });
 				break;*/
 			case PC_I:
-				value.stack = new PC_I_Stack(skin);
+				value.stack = new ConfigStack(skin);
 				break;
 
 			default:

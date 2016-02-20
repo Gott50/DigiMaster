@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -13,7 +14,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory.Woodstox;
 
 /**
  * Loads and saves an Excel File to store Data in it
@@ -152,6 +156,7 @@ public class ExcelFileManager {
 			row = this.worksheet.createRow(rownum);
 		createCell(worksheet.getWorkbook(), row, column, CellStyle.ALIGN_RIGHT,
 				CellStyle.VERTICAL_CENTER, content);
+		refreshCells(generateTypeFromSuffix(file), worksheet.getWorkbook());
 	}
 
 	public String getCellString(short column, short rownum) {
@@ -178,5 +183,20 @@ public class ExcelFileManager {
 		default:
 			return null;
 		}
+	}
+	
+	private void refreshCells(String type,Workbook workbook){
+		switch (type) {
+		case "HSSF":
+			HSSFFormulaEvaluator.evaluateAllFormulaCells(workbook);
+			break;
+		case "SXSSF":
+		case "XSSF":
+			 XSSFFormulaEvaluator.evaluateAllFormulaCells((XSSFWorkbook) workbook);
+			 break;
+		default:
+			System.err.println("refreshCells faild, Thus you crash and burn");
+		}
+		
 	}
 }

@@ -12,7 +12,7 @@ public class TestClass {
 		JSONObject jsonObject = createJsonFromRequest();
 
 		String datum = "2015";//new Date().getYear() + "";// jsonObject.getString("datum");
-		ExcelFileManager excelFileManager = new ExcelFileManager("HSSF", "TestClass.xls", datum); 
+		ExcelFileManager excelFileManager = new ExcelFileManager("TestClass.xls", datum); 
 
 		JSONArray nameArray = jsonObject.getJSONArray("nameArray");
 		System.out.println(nameArray.toString());

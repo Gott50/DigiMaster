@@ -176,9 +176,8 @@ public class EMServer extends HttpServlet {
 				+ createJsonObjectFromFile(folder.positionFolder + "/"
 						+ jsonObject.getString("dataName") + POSDATA_EXT));
 		JSONArray nameJsonArray = createJsonObjectFromFile(
-				folder.positionFolder + "/"
-						+ jsonObject.getString("dataName") + POSDATA_EXT)
-				.getJSONArray("nameArray");
+				folder.positionFolder + "/" + jsonObject.getString("dataName")
+						+ POSDATA_EXT).getJSONArray("nameArray");
 		response.setContentType("application/json");
 		response.getWriter().println(nameJsonArray.toString());
 	}
@@ -187,7 +186,7 @@ public class EMServer extends HttpServlet {
 			HttpServletResponse response, JSONObject jsonObject)
 			throws JSONException, IOException {
 
-		ExcelFileManager excelFileManager = new ExcelFileManager(EXC_DATA_TYPE,
+		ExcelFileManager excelFileManager = new ExcelFileManager(
 				folder.dataFolder + "/" + jsonObject.getString("dataName")
 						+ EXC_DATA_EXT, Calendar.getInstance().get(
 						Calendar.YEAR)
@@ -196,10 +195,9 @@ public class EMServer extends HttpServlet {
 		for (Data data : new DataManager(jsonObject.getJSONObject("content")
 				.getJSONArray("nameArray"), jsonObject.getJSONObject("content")
 				.getJSONArray("dataArray"), createJsonObjectFromFile(
-				folder.positionFolder + "/"
-						+ jsonObject.getString("dataName") + POSDATA_EXT)
-				.getJSONArray("posByteArray"), Calendar.getInstance().get(
-				Calendar.MONTH)).getDataArray()) {
+				folder.positionFolder + "/" + jsonObject.getString("dataName")
+						+ POSDATA_EXT).getJSONArray("posByteArray"), Calendar
+				.getInstance().get(Calendar.MONTH)).getDataArray()) {
 			excelFileManager.setCellString(data.row, data.column, data.data);
 		}
 		excelFileManager.saveWorkbook(null);

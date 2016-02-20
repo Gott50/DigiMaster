@@ -8,7 +8,6 @@ import java.io.IOException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -21,26 +20,21 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * 
  */
 public class ExcelFileManager {
-	private Workbook workbook;
 	private Sheet worksheet;
-	private String type;
-	private String direction; // Direction with name and suffix
+	private String file;
 
-	public ExcelFileManager(String type, String direction, String sheetName) {
-		this.type = type != null ? type : generateTypeFromSuffix(direction);
-		System.out.println("type: " + type);
-		this.direction = direction;
-		System.out.println("direction: " + direction);
+	public ExcelFileManager(String file, String sheetName) {
+		System.out.println("type: " + generateTypeFromSuffix(file));
+		this.file = file;
+		System.out.println("direction: " + file);
 		try {
-			workbook = loadWorkbook(type, direction, sheetName);
+			worksheet = getWorkSheet(loadWorkbook(file), sheetName);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		worksheet = getWorkSheet(workbook, sheetName);
 	}
 
-	public Workbook loadWorkbook(String type, String direction, String sheetName)
-			throws IOException {
+	public Workbook loadWorkbook(String direction) throws IOException {
 		FileInputStream fileInputStream;
 		try {
 			fileInputStream = new FileInputStream(direction);
@@ -48,9 +42,9 @@ public class ExcelFileManager {
 			e.printStackTrace();
 			fileInputStream = null;
 		}
-		//TODO if workbook is not there, copy the last one and clean data
-		Workbook workbook = createWorkbook(type, fileInputStream);
-		return workbook;
+		// TODO if workbook is not there, copy the last one and clean data
+		return createWorkbook(generateTypeFromSuffix(direction),
+				fileInputStream);
 	}
 
 	public Sheet getWorkSheet(Workbook workbook, String sheetName) {
@@ -73,46 +67,58 @@ public class ExcelFileManager {
 	public void saveWorkbook(String direction) throws IOException {
 		// Write the output to a file
 		FileOutputStream fileOut = new FileOutputStream(
-				direction != null ? direction + "." + getFileSuffix(type)
-						: this.direction);
-		workbook.write(fileOut);
+				direction != null ? direction + "."
+						+ getFileSuffix(generateTypeFromSuffix(direction))
+						: this.file);
+		worksheet.getWorkbook().write(fileOut);
 		System.out.println("saveWorkbook at: " + fileOut.toString());
 		fileOut.close();
 	}
 
 	private static String generateTypeFromSuffix(String fileName) {
-		// TODO make it smarter
-		String type = null;
 		if (fileName.contains("xls"))
-			type = "HSSF";
+			return "HSSF";
 		else if (fileName.contains("xlsx"))
-			type = "XSSF";
-
-		System.out.println("Type generated form Suffix: " + type);
-		return type;
+			return "XSSF";
+		else
+			return null;
 	}
 
 	private static Workbook createWorkbook(String type,
 			FileInputStream fileInputStream) throws IOException {
-		// TODO Not completely by ME
-		if (fileInputStream != null) {
-			if ("HSSF".equals(type))
-				return new HSSFWorkbook(fileInputStream);
-			else if ("XSSF".equals(type))
-				return new XSSFWorkbook(fileInputStream);
-			else if ("SXSSF".equals(type))
-				return new SXSSFWorkbook(new XSSFWorkbook(fileInputStream));
-			else
-				usage("Unknown type \"" + type + "\"");
-		} else {
-			if ("HSSF".equals(type))
-				return new HSSFWorkbook();
-			else if ("XSSF".equals(type))
-				return new XSSFWorkbook();
-			else if ("SXSSF".equals(type))
-				return new SXSSFWorkbook();
-			else
-				usage("Unknown type \"" + type + "\"");
+		if (fileInputStream != null)
+			return loadWorkbook(type, fileInputStream);
+		else
+			return generateNewWorkbook(type);
+	}
+
+	private static Workbook loadWorkbook(String type,
+			FileInputStream fileInputStream) throws IOException {
+		switch (type) {
+		case "HSSF":
+			return new HSSFWorkbook(fileInputStream);
+		case "XSSF":
+			return new XSSFWorkbook(fileInputStream);
+		case "SXSSF":
+			return new SXSSFWorkbook(new XSSFWorkbook(fileInputStream));
+		default:
+			usage("Unknown type \"" + type + "\"");
+			break;
+		}
+		return null;
+	}
+
+	private static Workbook generateNewWorkbook(String type) {
+		switch (type) {
+		case "HSSF":
+			return new HSSFWorkbook();
+		case "XSSF":
+			return new XSSFWorkbook();
+		case "SXSSF":
+			return new SXSSFWorkbook();
+		default:
+			usage("Unknown type \"" + type + "\"");
+			break;
 		}
 		return null;
 	}
@@ -132,9 +138,8 @@ public class ExcelFileManager {
 	public static void createCell(Workbook wb, Row row, short column,
 			short halign, short valign, String content) {
 		// TODO Not by ME
-		CreationHelper ch = wb.getCreationHelper();
 		Cell cell = row.createCell(column);
-		cell.setCellValue(ch.createRichTextString(content));
+		cell.setCellValue(wb.getCreationHelper().createRichTextString(content));
 		CellStyle cellStyle = wb.createCellStyle();
 		cellStyle.setAlignment(halign);
 		cellStyle.setVerticalAlignment(valign);
@@ -145,7 +150,7 @@ public class ExcelFileManager {
 		Row row = this.worksheet.getRow(rownum);
 		if (row == null)
 			row = this.worksheet.createRow(rownum);
-		createCell(this.workbook, row, column, CellStyle.ALIGN_RIGHT,
+		createCell(worksheet.getWorkbook(), row, column, CellStyle.ALIGN_RIGHT,
 				CellStyle.VERTICAL_CENTER, content);
 	}
 
@@ -164,13 +169,14 @@ public class ExcelFileManager {
 	}
 
 	private static String getFileSuffix(String type) {
-		// TODO Not by ME
-		if ("HSSF".equals(type))
+		switch (type) {
+		case "HSSF":
 			return "xls";
-		else if ("XSSF".equals(type))
+		case "XSSF":
+		case "SXSSF":
 			return "xlsx";
-		else if ("SXSSF".equals(type))
-			return "xlsx";
-		return null;
+		default:
+			return null;
+		}
 	}
 }

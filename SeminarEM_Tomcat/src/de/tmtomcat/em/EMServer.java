@@ -26,14 +26,38 @@ import de.tmtomcat.em.DataManager.Data;
  */
 @WebServlet(description = "Energy Management Server", urlPatterns = { "/EMServer" })
 public class EMServer extends HttpServlet {
+	public static class FolderManager {
+		private String userDataFolder;
+		private String positionFolder;
+		private String dataFolder;
+
+		public FolderManager(String userDataPath) {
+			init(userDataPath);
+		}
+
+		private void init(String userDataPath) {
+			userDataFolder = userDataPath;
+			System.out.println("cretated new UserDataFoler? "
+					+ new File(userDataFolder).mkdir());
+			positionFolder = userDataFolder + "/Positions";
+			System.out.println("cretated new PositionFolder? "
+					+ new File(positionFolder).mkdir());
+			dataFolder = userDataFolder + "/Data";
+			System.out.println("cretated new DataFolderString? "
+					+ new File(dataFolder).mkdir());
+		}
+
+		public String[] getAll() {
+			return new String[] { userDataFolder, positionFolder, dataFolder, };
+		}
+	}
+
 	private static final String EXC_DATA_TYPE = "HSSF";
 	private static final String EXC_DATA_EXT = ".xls";
 	private static final long serialVersionUID = 1L;
 	private static final JSONObject standardJsonObject = null;
 	private static final String POSDATA_EXT = ".txt";
-	private String userDataFolder;
-	private String positionFolder;
-	private String dataFolder;
+	private FolderManager folder;
 
 	@Override
 	public void destroy() {
@@ -44,19 +68,7 @@ public class EMServer extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		super.init();
-		makeFolders();
-	}
-
-	private void makeFolders() {
-		userDataFolder = getServletContext().getRealPath("/UserData");
-		System.out.println("cretated new UserDataFoler? "
-				+ new File(userDataFolder).mkdir());
-		positionFolder = userDataFolder + "/Positions";
-		System.out.println("cretated new PositionFolder? "
-				+ new File(positionFolder).mkdir());
-		dataFolder = userDataFolder + "/Data";
-		System.out.println("cretated new DataFolderString? "
-				+ new File(dataFolder).mkdir());
+		folder = new FolderManager(getServletContext().getRealPath("/UserData"));
 	}
 
 	private JSONObject createJsonObjectFromFile(String filePath) {
@@ -111,11 +123,11 @@ public class EMServer extends HttpServlet {
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Request: " + request.getReader().readLine());
-		for (File file : new File(positionFolder).listFiles()) {
+		for (File file : new File(folder.positionFolder).listFiles()) {
 			if (file.isFile()) {
 				setResponse(response, "File: " + file.getName());
 			} else if (file.isDirectory()) {
-//				 response.getWriter().println("Dir: " + file.getName());
+				// response.getWriter().println("Dir: " + file.getName());
 			}
 		}
 	}
@@ -161,11 +173,12 @@ public class EMServer extends HttpServlet {
 	private void sendDataNameInfo(HttpServletResponse response,
 			JSONObject jsonObject) throws IOException {
 		System.out.println("loaded: "
-				+ createJsonObjectFromFile(positionFolder + "/"
+				+ createJsonObjectFromFile(folder.positionFolder + "/"
 						+ jsonObject.getString("dataName") + POSDATA_EXT));
 		JSONArray nameJsonArray = createJsonObjectFromFile(
-				positionFolder + "/" + jsonObject.getString("dataName")
-						+ POSDATA_EXT).getJSONArray("nameArray");
+				folder.positionFolder + "/"
+						+ jsonObject.getString("dataName") + POSDATA_EXT)
+				.getJSONArray("nameArray");
 		response.setContentType("application/json");
 		response.getWriter().println(nameJsonArray.toString());
 	}
@@ -175,7 +188,7 @@ public class EMServer extends HttpServlet {
 			throws JSONException, IOException {
 
 		ExcelFileManager excelFileManager = new ExcelFileManager(EXC_DATA_TYPE,
-				dataFolder + "/" + jsonObject.getString("dataName")
+				folder.dataFolder + "/" + jsonObject.getString("dataName")
 						+ EXC_DATA_EXT, Calendar.getInstance().get(
 						Calendar.YEAR)
 						+ "");
@@ -183,9 +196,10 @@ public class EMServer extends HttpServlet {
 		for (Data data : new DataManager(jsonObject.getJSONObject("content")
 				.getJSONArray("nameArray"), jsonObject.getJSONObject("content")
 				.getJSONArray("dataArray"), createJsonObjectFromFile(
-				positionFolder + "/" + jsonObject.getString("dataName")
-						+ POSDATA_EXT).getJSONArray("posByteArray"), Calendar
-				.getInstance().get(Calendar.MONTH)).getDataArray()) {
+				folder.positionFolder + "/"
+						+ jsonObject.getString("dataName") + POSDATA_EXT)
+				.getJSONArray("posByteArray"), Calendar.getInstance().get(
+				Calendar.MONTH)).getDataArray()) {
 			excelFileManager.setCellString(data.row, data.column, data.data);
 		}
 		excelFileManager.saveWorkbook(null);
@@ -194,8 +208,8 @@ public class EMServer extends HttpServlet {
 	private void updateConfigs(HttpServletRequest request,
 			HttpServletResponse response, JSONObject jsonObject)
 			throws IOException {
-		String file = positionFolder + "/" + jsonObject.getString("dataName")
-				+ POSDATA_EXT;
+		String file = folder.positionFolder + "/"
+				+ jsonObject.getString("dataName") + POSDATA_EXT;
 		JSONObject content = jsonObject.getJSONObject("content");
 		if (new File(file).exists()) {
 			System.err.println("File already exists");

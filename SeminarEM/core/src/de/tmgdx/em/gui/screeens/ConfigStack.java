@@ -22,6 +22,10 @@ public class ConfigStack extends Stack {
 	private TextField dataNameTextField;
 
 	public ConfigStack(Skin skin) {
+		posTextFieldArray2D = new Array<Array<TextField>>();
+		nameTextFieldArray = new Array<TextField>();
+		nameTextFieldArray.add(new TextField("Name", skin));
+		posTextFieldArray2D.add(new Array<TextField>());
 		init(skin);
 	}
 
@@ -61,10 +65,10 @@ public class ConfigStack extends Stack {
 		this.setPosition(Constants.VIEWPORT_GUI_WIDTH * StackEnum.CON_PORTION,
 				0);
 
-		posTextFieldArray2D = new Array<Array<TextField>>();
-		nameTextFieldArray = new Array<TextField>();
-		nameTextFieldArray.add(new TextField("Name", skin));
-		posTextFieldArray2D.add(new Array<TextField>());
+		if (nameTextFieldArray.size == 0)
+			nameTextFieldArray.add(new TextField("Name", skin));
+		if (posTextFieldArray2D.size == 0)
+			posTextFieldArray2D.add(new Array<TextField>());
 
 		Table table = buildCoordinatTabel(skin, buildAddVarButton(skin));
 		table.add().row();

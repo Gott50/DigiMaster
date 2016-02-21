@@ -11,7 +11,6 @@ import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
 public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasser"),
 	PC_I("Control");
-
 	public static final String COMUNICATION_FORMAT = "application/json";
 	public static final String SERVER_URL = "http://localhost:8080/SeminarEM_Tomcat/EMServer";
 
@@ -65,21 +64,19 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 			return true;
 	}
 
-	private static String[] generateNames(String restultString) {
-		String[] strArray2 = restultString.split("File: ");
+	private static String[] generateNames(String resultString) {
+		String[] strArray = resultString.split("File: ");
 
 		int elements = 0;
-		for (String string : strArray2) {
-			if (string.isEmpty() || !string.contains(".txt"))// ||
-																// !string.endsWith(".txt")
+		for (String string : strArray) {
+			if (string.isEmpty() || !string.contains(".txt"))
 				continue;
-			// TODO Filter Directories and /n out
 			System.out.println(elements + ": " + string);
 			elements++;
 		}
 		String[] out = new String[elements];
 		int i = 0;
-		for (String string : strArray2) {
+		for (String string : strArray) {
 			if (string.isEmpty() || !string.contains(".txt"))
 				continue;
 			out[i++] = string.substring(0, string.length() - 4);
@@ -89,7 +86,6 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 
 	private static void setNameArrayFromServer(String[] out) {
 		nameArrayFromServer = out;
-		// TODO save NameArray local
 	}
 
 	public static String[] getNames() {
@@ -111,13 +107,16 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 		return out;
 	}
 
+	private static int numScreens;
 	private static int getNumberOfScreens() {
-		int length = StackEnum.values().length;
+		if(numScreens != 0)
+			return numScreens;
+		
+		int numScreens = StackEnum.values().length;
 		if (getNameArrayFromServer() != null) {
-			length += getNameArrayFromServer().length;
-			// TODO make it better length -= 2;
+			numScreens += getNameArrayFromServer().length;
 		}
-		return length;
+		return numScreens;
 	}
 
 	public static void generateStack(Skin skin) {
@@ -150,21 +149,26 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 	public Stack getStack() {
 		return stack;
 	}
+	
+	private static Stack[] stacks;
 
 	public static Stack[] getStacks(Skin skin) {
-		Stack[] out = new Stack[getNumberOfScreens()];
+		if(stacks != null)
+			return stacks;
+		
+		stacks = new Stack[getNumberOfScreens()];
 		int index = 0;
 		for (String name : getNameArrayFromServer()) {
-			out[index++] = loadStackDataFromServer(name, skin);
+			stacks[index++] = loadStackDataFromServer(name, skin);
 		}
 		for (StackEnum stackEnum : StackEnum.values()) {
 			// TODO make it better
 			if (getNameArrayFromServer() != null && stackEnum.plattform == "SP")
 				continue;
-			out[index++] = stackEnum.stack;
+			stacks[index++] = stackEnum.stack;
 		}
-
-		return out;
+		// TODO save StackData local
+		return stacks;
 	}
 
 	private static Stack loadStackDataFromServer(String dataName, Skin skin) {
@@ -177,29 +181,32 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 		};
 		request.sendRequest();
 		
-		// TODO Synchronize!!!
 		while (stackDataFromServer == null)
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-
-		return new Input_Stack(dataName, skin,
+		Stack out = new Input_Stack(dataName, skin,
 				(String[]) stackDataFromServer.toArray(String.class));
-		// TODO save StackData local
+		stackDataFromServer = null;
+		return out ;
 	}
 
 	private static Array<String> generateStackData(HttpResponse httpResponse) {
+		String result = httpResponse.getResultAsString();
+		System.out.println("Result: "+result);
 		Array<String> strArray = new Array<String>();
-		for (String string : httpResponse.getResultAsString().split(",")) {
+		
+		for (String string : result.split(",")) {
 			if (string.isEmpty())
 				continue;
-			// TODO Filter Directories and/n out
 			if (string.startsWith("["))
 				string = string.substring(2, string.length() - 1);
 			else if (string.endsWith("\n"))
 				string = string.substring(1, string.length() - 3);
+			if(string.endsWith("\"]"))
+				string = string.substring(0, string.length() - 2);
 			else
 				string = string.substring(1, string.length() - 1);
 			strArray.add(string);
@@ -208,9 +215,11 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 	}
 
 	private static Array<String> stackDataFromServer;
+	private static Array<Array<String>> stackDataFromServerArray = new Array<Array<String>>();
 
 	protected static void setStackDataFromServer(Array<String> stackData) {
 		stackDataFromServer = stackData;
+		stackDataFromServerArray.add(stackData);
 	}
 
 	protected static Array<String> getStackDataFromServer() {

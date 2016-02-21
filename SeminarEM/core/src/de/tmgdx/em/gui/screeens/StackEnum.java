@@ -9,8 +9,7 @@ import com.badlogic.gdx.utils.Array;
 
 import de.tmgdx.em.gui.screeens.HttpContentObject.Command;
 
-public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasser"),
-	PC_I("Control");
+public enum StackEnum {	PC_I("Control");
 	public static final String COMUNICATION_FORMAT = "application/json";
 	public static final String SERVER_URL = "http://localhost:8080/SeminarEM_Tomcat/EMServer";
 
@@ -45,7 +44,6 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 		};
 		request.sendRequest();
 
-		// TODO Synchronize!!!
 		while (nameArrayFromServer == null)
 			try {
 				Thread.sleep(100);
@@ -122,18 +120,6 @@ public enum StackEnum {// SP_FROM_SERVER(""),SP_I("Waermeenergie"), SP_II("Wasse
 	public static void generateStack(Skin skin) {
 		for (StackEnum value : StackEnum.values())
 			switch (value) {
-			/*case SP_II:
-				value.stack = new Input_Stack(value.name, skin, new String[] {
-						"Datum", "Kaltwasser FOS gross",
-						"Kaltwasser FOS klein", "Warmwasser Turnh.",
-						"Warmwasser FOS", "Kaltwasser WS gross",
-						"Kaltwasser WS klein" });
-				break;
-			case SP_I:
-				value.stack = new Input_Stack(value.name, skin, new String[] {
-						"Datum", "Fernwärme", "Turnhalle",
-						"Uebertragungsstation", "Hausmeister" });
-				break;*/
 			case PC_I:
 				value.stack = new ConfigStack(skin);
 				break;

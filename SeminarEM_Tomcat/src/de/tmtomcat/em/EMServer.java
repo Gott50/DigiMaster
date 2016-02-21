@@ -72,13 +72,13 @@ public class EMServer extends HttpServlet {
 	}
 
 	private JSONObject createJsonObjectFromFile(String filePath) {
-		System.out.println("create Json form:" + filePath);
+//		System.out.println("create Json form:" + filePath);
 		JSONObject jsonObject = null;
 		BufferedReader bufferedReader = null;
 		try {
 			File f = new File(filePath);
 			if (!f.exists()) {
-				System.out.println("File not exists: " + filePath);
+//				System.out.println("File not exists: " + filePath);
 				writeJSONtoFile(filePath, standardJsonObject);
 				jsonObject = standardJsonObject;
 			} else {
@@ -86,7 +86,7 @@ public class EMServer extends HttpServlet {
 				jsonObject = createJson(bufferedReader);
 			}
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+//			System.out.println(e.getMessage());
 		}
 
 		return jsonObject;
@@ -122,7 +122,7 @@ public class EMServer extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("Request: " + request.getReader().readLine());
+//		System.out.println("Request: " + request.getReader().readLine());
 		for (File file : new File(folder.positionFolder).listFiles()) {
 			if (file.isFile()) {
 				setResponse(response, "File: " + file.getName());
@@ -144,7 +144,7 @@ public class EMServer extends HttpServlet {
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		JSONObject jsonObject = createJsonFromRequest(request);
-		System.out.println("JsonObject created: " + jsonObject.toString());
+//		System.out.println("JsonObject created: " + jsonObject.toString());
 
 		try {
 			switch (jsonObject.getString("command")) {
@@ -172,9 +172,9 @@ public class EMServer extends HttpServlet {
 	 */
 	private void sendDataNameInfo(HttpServletResponse response,
 			JSONObject jsonObject) throws IOException {
-		System.out.println("loaded: "
-				+ createJsonObjectFromFile(folder.positionFolder + "/"
-						+ jsonObject.getString("dataName") + POSDATA_EXT));
+//		System.out.println("loaded: "
+//				+ createJsonObjectFromFile(folder.positionFolder + "/"
+//						+ jsonObject.getString("dataName") + POSDATA_EXT));
 		JSONArray nameJsonArray = createJsonObjectFromFile(
 				folder.positionFolder + "/" + jsonObject.getString("dataName")
 						+ POSDATA_EXT).getJSONArray("nameArray");
@@ -216,7 +216,7 @@ public class EMServer extends HttpServlet {
 	}
 
 	private void writeJSONtoFile(String file, JSONObject content) {
-		System.out.println("Write to File: " + content.toString());
+//		System.out.println("Write to File: " + content.toString());
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(new FileWriter(new File(file)));

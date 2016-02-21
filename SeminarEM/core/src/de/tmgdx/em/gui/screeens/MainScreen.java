@@ -11,6 +11,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Stack;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.VerticalGroup;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.viewport.*;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import de.tmgdx.em.Constants;
 import de.tmgdx.em.DirectedGame;
@@ -61,21 +63,22 @@ public class MainScreen extends AbstractScreen {
 
 	@Override
 	public void resize(int width, int height) {
-		// FIXME Anchor top left corner + scroll bar
-		stage.getViewport().update((int) Constants.VIEWPORT_GUI_WIDTH,
-				(int) Constants.VIEWPORT_GUI_HEIGHT, false);
 		stage.getViewport().update(width, height, true);
 	}
 
 	@Override
 	public void show() {
-		stage = new Stage();
+		stage = new Stage(makeViewport());
 		skinLibgdx = new Skin(Gdx.files.internal(Constants.SKIN_LIBGDX_UI),
 				new TextureAtlas(Constants.TEXTURE_ATLAS_LIBGDX_UI));
 
 		StackEnum.generateStack(skinLibgdx);
 
 		rebuildStage(mainStack);
+	}
+
+	private Viewport makeViewport() {
+		return new ExtendViewport(Constants.VIEWPORT_GUI_WIDTH, Constants.VIEWPORT_GUI_HEIGHT);
 	}
 
 	private void rebuildStage(Stack mainStack) {

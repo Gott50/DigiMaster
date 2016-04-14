@@ -1,5 +1,8 @@
 package de.tmtomcat.em;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,18 +39,31 @@ public class DataManager {
 	 * @param dataPositionJson
 	 *            {@link JSONObject} that saves the position to the names
 	 */
-	public DataManager(JSONArray nameJsonArray, JSONArray dataJsonArray,
+	public DataManager(String[] nameJsonArray, Integer[] dataJsonArray,
 			JSONArray dataPositionArray, int dateInt) {
 		// key: name + Col/Row
-		dataArray = new Data[nameJsonArray.length()];
+		dataArray = new Data[nameJsonArray.length];
 		int dataSet=dateInt*dataArray.length*2;
 		for (int i = 0; i < dataArray.length; i++) {
-			dataArray[i] = new Data(nameJsonArray.getString(i),
-					dataJsonArray.getInt(i) + "",
+			dataArray[i] = new Data(nameJsonArray[i],
+					dataJsonArray[i] + "",
 					dataPositionArray.getInt(dataSet+i * 2)-1+"",
 					dataPositionArray.getInt(dataSet+i * 2+1)-1+"");
 		}
 	}
+	/*public DataManager(JSONArray nameJsonArray, JSONArray dataJsonArray,
+			JSONArray dataPositionArray, int dateInt) {
+		this(convertJSONArray(nameJsonArray, new String[]{}),  convertJSONArray(nameJsonArray,new Integer[]{}),
+				 dataPositionArray,  dateInt);
+	}
+	public static <T> T[] convertJSONArray(JSONArray jsonArray, T[] a) {
+		Set<T> out = new HashSet();
+		for (Object ob : jsonArray) {
+			out.add((T) ob);
+		}
+		System.out.println(a.getClass()+"-Set: "+out);
+		return out.toArray(a);
+	}//*/
 
 	public Data[] getDataArray() {
 		return dataArray;

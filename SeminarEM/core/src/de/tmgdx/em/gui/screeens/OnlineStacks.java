@@ -43,7 +43,7 @@ public class OnlineStacks {
 		nameArrayFromServer = out;
 	}
 	private static String[] generateNames(String resultString) {
-		String[] strArray = resultString.split("File: ");
+		String[] strArray = resultString.split(" File: ");
 
 		int elements = 0;
 		for (String string : strArray) {

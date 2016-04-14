@@ -114,7 +114,7 @@ public class MainScreen extends AbstractScreen {
 			btnSwitchScreen.addListener(new ChangeListener() {
 				@Override
 				public void changed(ChangeEvent event, Actor actor) {
-					rebuildStage(StackEnum.getStacks(skinLibgdx)[STACK_NUM]);// FIXME false stack is build
+					rebuildStage(StackEnum.getStacks(skinLibgdx)[STACK_NUM]);
 				}
 			});
 		}

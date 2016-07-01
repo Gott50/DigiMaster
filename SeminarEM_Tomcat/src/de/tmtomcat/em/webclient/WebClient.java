@@ -134,7 +134,7 @@ public class WebClient extends HttpServlet {
 		HttpSession session = request.getSession();
 		session.removeAttribute("errorMessage");
 		session.setAttribute("dataNames", dataNames);
-		// session.setAttribute("Name", request.getParameter("dataName"));
+		session.setAttribute("Name", request.getParameter("dataName"));
 		RequestDispatcher dispatcher = request
 				.getRequestDispatcher("client.jsp");// "input.jsp"
 		dispatcher.forward(request, response);

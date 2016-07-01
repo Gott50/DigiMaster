@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class ErrorMessage {
 	static private String[] messages = {
-			"The input has to be a positive integer", "mach´s noamois" };
+			"The input has to be a positive integer", "mach´s noamoi" };
 
 	public static String get() {
 		if (messages.length <= 0)

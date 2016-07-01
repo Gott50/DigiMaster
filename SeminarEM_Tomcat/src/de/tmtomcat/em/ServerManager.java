@@ -69,7 +69,8 @@ public class ServerManager {
 		Set<String> out = new HashSet<String>();
 		for (File file : new File(folder.positionFolder).listFiles()) {
 			{
-				//System.out.println(file);
+				System.out.println(file);
+//				if(file.getName() == "null.txt") continue;
 				if (file.isFile() && file.getName().length()>4 &&file.getName().endsWith(".txt"))
 					out.add(file.getName().substring(0,
 							file.getName().length() - 4));
